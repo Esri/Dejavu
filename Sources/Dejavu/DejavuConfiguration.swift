@@ -147,10 +147,9 @@ public class DejavuConfiguration {
         let replaced = filtered.map { (key: String, value: Any) -> (String, Any) in
             if let replace = toReplace[key] {
                 return (key, replace)
-            } else if let nestedJson = value as? [String: Any] {
-                return (key, normalize(jsonDictionary: nestedJson, mode: mode))
+            } else {
+                return (key, normalize(jsonObject: value, mode: mode))
             }
-            return (key, value)
         }
         
         return Dictionary(uniqueKeysWithValues: replaced)
