@@ -72,7 +72,7 @@ public class DejavuConfiguration {
             fileURL: fileURL,
             mode: mode,
             networkObserver: DejavuURLProtocolNetworkObserver.shared,
-            networkInterceptor: DejavuURLProtocolNetworkInterceptor.shared
+            networkInterceptor: URLProtocolNetworkInterceptor.shared
         )
     }
     

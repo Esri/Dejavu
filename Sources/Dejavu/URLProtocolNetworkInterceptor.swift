@@ -14,8 +14,8 @@
 import Foundation
 
 /// A network interceptor that uses URLProtocol registration for network interception.
-public class DejavuURLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
-    public static let shared = DejavuURLProtocolNetworkInterceptor()
+public class URLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
+    public static let shared = URLProtocolNetworkInterceptor()
     public static let protocolClass: URLProtocol.Type = InterceptorURLProtocol.self
     
     private init() {}
@@ -48,7 +48,7 @@ public class DejavuURLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
 
 class InterceptorURLProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool {
-        let hasHandler = DejavuURLProtocolNetworkInterceptor.shared.handler != nil
+        let hasHandler = URLProtocolNetworkInterceptor.shared.handler != nil
         if !hasHandler {
             log("canInit called with no handler", .warning)
         }
@@ -60,7 +60,7 @@ class InterceptorURLProtocol: URLProtocol {
     }
     
     override func startLoading() {
-        guard let handler = DejavuURLProtocolNetworkInterceptor.shared.handler else {
+        guard let handler = URLProtocolNetworkInterceptor.shared.handler else {
             log("canInit called with no handler", .warning)
             return
         }
