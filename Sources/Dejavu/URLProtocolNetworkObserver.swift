@@ -13,8 +13,8 @@
 
 import Foundation
 
-public class DejavuURLProtocolNetworkObserver: DejavuNetworkObserver {
-    public static let shared = DejavuURLProtocolNetworkObserver()
+public class URLProtocolNetworkObserver: DejavuNetworkObserver {
+    public static let shared = URLProtocolNetworkObserver()
     public static let protocolClass: URLProtocol.Type = ObserverProtocol.self
     
     private init() {}
@@ -49,7 +49,7 @@ class ObserverProtocol: URLProtocol {
     static let session = URLSession(configuration: .ephemeral)
     
     override class func canInit(with request: URLRequest) -> Bool {
-        let hasHandler = DejavuURLProtocolNetworkObserver.shared.handler != nil
+        let hasHandler = URLProtocolNetworkObserver.shared.handler != nil
         if !hasHandler {
             log("canInit called with no handler", .warning)
         }
@@ -61,7 +61,7 @@ class ObserverProtocol: URLProtocol {
     }
     
     override func startLoading() {
-        guard let handler = DejavuURLProtocolNetworkObserver.shared.handler else {
+        guard let handler = URLProtocolNetworkObserver.shared.handler else {
             log("canInit called with no handler", .warning)
             return
         }

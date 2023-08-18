@@ -71,7 +71,7 @@ public class DejavuConfiguration {
         self.init(
             fileURL: fileURL,
             mode: mode,
-            networkObserver: DejavuURLProtocolNetworkObserver.shared,
+            networkObserver: URLProtocolNetworkObserver.shared,
             networkInterceptor: URLProtocolNetworkInterceptor.shared
         )
     }
