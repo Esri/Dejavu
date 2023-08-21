@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		75AF121F2A9422D300C78A8B /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75AF121E2A9422D300C78A8B /* Dejavu */; };
+		75B29ADE2A9414B000C53FDF /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75B29ADD2A9414B000C53FDF /* Dejavu */; };
 		75EDE9AE2A8FE62200DDAC12 /* ExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */; };
 		75EDE9B02A8FE62200DDAC12 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EDE9AF2A8FE62200DDAC12 /* ContentView.swift */; };
 		75EDE9B22A8FE62500DDAC12 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EDE9B12A8FE62500DDAC12 /* Assets.xcassets */; };
@@ -35,6 +37,7 @@
 
 /* Begin PBXFileReference section */
 		75B29ADB2A940EEF00C53FDF /* Dejavu */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Dejavu; path = ..; sourceTree = "<group>"; };
+		75E1326D2A941F0E00BBE467 /* Examples.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Examples.entitlements; sourceTree = "<group>"; };
 		75EDE9AA2A8FE62200DDAC12 /* Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Examples.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamplesApp.swift; sourceTree = "<group>"; };
 		75EDE9AF2A8FE62200DDAC12 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -52,6 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75B29ADE2A9414B000C53FDF /* Dejavu in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75AF121F2A9422D300C78A8B /* Dejavu in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +77,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		75B29ADC2A9414B000C53FDF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		75EDE9A12A8FE62200DDAC12 = {
 			isa = PBXGroup;
 			children = (
@@ -80,6 +92,7 @@
 				75EDE9BD2A8FE62500DDAC12 /* ExamplesTests */,
 				75EDE9C72A8FE62500DDAC12 /* ExamplesUITests */,
 				75EDE9AB2A8FE62200DDAC12 /* Products */,
+				75B29ADC2A9414B000C53FDF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -96,6 +109,7 @@
 		75EDE9AC2A8FE62200DDAC12 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				75E1326D2A941F0E00BBE467 /* Examples.entitlements */,
 				75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */,
 				75EDE9AF2A8FE62200DDAC12 /* ContentView.swift */,
 				75EDE9B12A8FE62500DDAC12 /* Assets.xcassets */,
@@ -145,6 +159,9 @@
 			dependencies = (
 			);
 			name = Examples;
+			packageProductDependencies = (
+				75B29ADD2A9414B000C53FDF /* Dejavu */,
+			);
 			productName = Examples;
 			productReference = 75EDE9AA2A8FE62200DDAC12 /* Examples.app */;
 			productType = "com.apple.product-type.application";
@@ -163,6 +180,9 @@
 				75EDE9BC2A8FE62500DDAC12 /* PBXTargetDependency */,
 			);
 			name = ExamplesTests;
+			packageProductDependencies = (
+				75AF121E2A9422D300C78A8B /* Dejavu */,
+			);
 			productName = ExamplesTests;
 			productReference = 75EDE9BA2A8FE62500DDAC12 /* ExamplesTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -347,7 +367,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -401,7 +421,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -416,6 +436,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Examples/Examples.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Examples/Preview Content\"";
@@ -426,6 +447,8 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -433,6 +456,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esri.dejavu.Examples;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -444,6 +470,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Examples/Examples.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Examples/Preview Content\"";
@@ -454,6 +481,8 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				"IPHONEOS_DEPLOYMENT_TARGET[sdk=macosx*]" = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -461,6 +490,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esri.dejavu.Examples;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -579,6 +611,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		75AF121E2A9422D300C78A8B /* Dejavu */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Dejavu;
+		};
+		75B29ADD2A9414B000C53FDF /* Dejavu */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Dejavu;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 75EDE9A22A8FE62200DDAC12 /* Project object */;
 }
