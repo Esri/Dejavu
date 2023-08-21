@@ -34,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		75B29ADB2A940EEF00C53FDF /* Dejavu */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Dejavu; path = ..; sourceTree = "<group>"; };
 		75EDE9AA2A8FE62200DDAC12 /* Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Examples.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamplesApp.swift; sourceTree = "<group>"; };
 		75EDE9AF2A8FE62200DDAC12 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -74,6 +75,7 @@
 		75EDE9A12A8FE62200DDAC12 = {
 			isa = PBXGroup;
 			children = (
+				75B29ADB2A940EEF00C53FDF /* Dejavu */,
 				75EDE9AC2A8FE62200DDAC12 /* Examples */,
 				75EDE9BD2A8FE62500DDAC12 /* ExamplesTests */,
 				75EDE9C72A8FE62500DDAC12 /* ExamplesUITests */,
