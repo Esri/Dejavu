@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		755D69112A96B837000F7BB6 /* URL+TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755D69102A96B837000F7BB6 /* URL+TestData.swift */; };
+		755D69132A96CB54000F7BB6 /* XCTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755D69122A96CB54000F7BB6 /* XCTest.swift */; };
 		75AF121F2A9422D300C78A8B /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75AF121E2A9422D300C78A8B /* Dejavu */; };
 		75B29ADE2A9414B000C53FDF /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75B29ADD2A9414B000C53FDF /* Dejavu */; };
 		75EDE9AE2A8FE62200DDAC12 /* ExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */; };
@@ -29,6 +30,7 @@
 /* Begin PBXFileReference section */
 		755D690A2A96B12D000F7BB6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		755D69102A96B837000F7BB6 /* URL+TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+TestData.swift"; sourceTree = "<group>"; };
+		755D69122A96CB54000F7BB6 /* XCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTest.swift; sourceTree = "<group>"; };
 		75B29ADB2A940EEF00C53FDF /* Dejavu */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Dejavu; path = ..; sourceTree = "<group>"; };
 		75E1326D2A941F0E00BBE467 /* Examples.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Examples.entitlements; sourceTree = "<group>"; };
 		75EDE9AA2A8FE62200DDAC12 /* Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Examples.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				755D690F2A96B819000F7BB6 /* Foundation */,
+				755D69122A96CB54000F7BB6 /* XCTest.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -255,6 +258,7 @@
 			files = (
 				75EDE9BF2A8FE62500DDAC12 /* ExamplesTests.swift in Sources */,
 				755D69112A96B837000F7BB6 /* URL+TestData.swift in Sources */,
+				755D69132A96CB54000F7BB6 /* XCTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -51,14 +51,6 @@ final class ExamplesTests: XCTestCase {
         Dejavu.startSession(configuration: config)
     }
     
-    var mockDataSubpath: String {
-        let uniqueName = name.dropFirst(2)
-            .dropLast()
-            .replacingOccurrences(of: " ", with: ".")
-        let testPathAndfileName = "\(uniqueName.replacingOccurrences(of: ".", with: "/")).sqlite"
-        return testPathAndfileName
-    }
-    
     override func tearDown() {
         Dejavu.endSession()
     }
