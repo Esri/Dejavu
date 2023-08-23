@@ -23,8 +23,8 @@ extension URL {
         } else {
             fatalError(
                 """
-                You must setup a custom path in Xcode -> Settings -> Locations -> Custom
-                Paths named `MOCKED_DATA` that points to the location of the test data.
+                You must setup a custom path in Xcode -> Settings -> Locations -> Custom Paths named
+                `MOCKED_DATA` that points to the location of the test data.
                 """
             )
         }
