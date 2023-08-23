@@ -16,22 +16,67 @@ import XCTest
 @testable import Dejavu
 
 final class ExamplesTests: XCTestCase {
-    func testExample() async throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    override func setUp() {
+        let config = DejavuConfiguration(
+            fileURL: .mockedData.appendingPathComponent(mockDataSubpath),
+            mode: .cleanRecord,
+            networkObserver: DejavuURLProtocolNetworkObserver.shared,
+            networkInterceptor: DejavuURLProtocolNetworkInterceptor.shared
+        )
         
-        let expectation = XCTestExpectation()
-        
-        let request = URLSession.shared.dataTask(with: URLRequest(url: URL(string: "https://www.esri.com")!)) { data, _, _ in
-            print(String(data: data!, encoding: .utf8)!)
-            expectation.fulfill()
+        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+            guard let self = self else { return }
+            let config = URLSessionConfiguration.default
+            config.protocolClasses = [protocolClass]
+            self.session = URLSession(configuration: config)
         }
         
-        request.resume()
+        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
+            guard let self = self else { return }
+            self.session = URLSession(configuration: .default)
+        }
         
-        await fulfillment(of: [expectation], timeout: 30)
+        DejavuURLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+            guard let self = self else { return }
+            let config = URLSessionConfiguration.default
+            config.protocolClasses = [protocolClass]
+            self.session = URLSession(configuration: config)
+        }
+        
+        DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
+            guard let self = self else { return }
+            self.session = URLSession(configuration: .default)
+        }
+        
+        Dejavu.startSession(configuration: config)
+    }
+    
+    var mockDataSubpath: String {
+        let uniqueName = name.dropFirst(2)
+            .dropLast()
+            .replacingOccurrences(of: " ", with: ".")
+        let testPathAndfileName = "\(uniqueName.replacingOccurrences(of: ".", with: "/")).sqlite"
+        return testPathAndfileName
+    }
+    
+    override func tearDown() {
+        Dejavu.endSession()
+    }
+    
+    var session: URLSession = URLSession(configuration: .default)
+    
+    func testExample() async throws {
+        let (data, _) = try await session.data(from: .esri)
+        XCTAssertEqual(data.count, 45668)
+    }
+}
+
+extension URL {
+    static var esri: URL {
+        URL(string: "https://www.esri.com")!
+    }
+    
+    static var mockedData: URL {
+        .init(filePath: "/Users/dtf/Desktop/mocked-data")
     }
 }
