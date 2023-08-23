@@ -18,8 +18,8 @@ import XCTest
 final class ExamplesTests: XCTestCase {
     override func setUp() {
         let config = DejavuConfiguration(
-            fileURL: .mockedData.appendingPathComponent(mockDataSubpath),
-            mode: .cleanRecord,
+            fileURL: .testDataDirectory.appendingPathComponent(mockDataSubpath),
+            mode: .playback,
             networkObserver: DejavuURLProtocolNetworkObserver.shared,
             networkInterceptor: DejavuURLProtocolNetworkInterceptor.shared
         )
@@ -74,9 +74,5 @@ final class ExamplesTests: XCTestCase {
 extension URL {
     static var esri: URL {
         URL(string: "https://www.esri.com")!
-    }
-    
-    static var mockedData: URL {
-        .init(filePath: "/Users/dtf/Desktop/mocked-data")
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		755D69112A96B837000F7BB6 /* URL+TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755D69102A96B837000F7BB6 /* URL+TestData.swift */; };
 		75AF121F2A9422D300C78A8B /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75AF121E2A9422D300C78A8B /* Dejavu */; };
 		75B29ADE2A9414B000C53FDF /* Dejavu in Frameworks */ = {isa = PBXBuildFile; productRef = 75B29ADD2A9414B000C53FDF /* Dejavu */; };
 		75EDE9AE2A8FE62200DDAC12 /* ExamplesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */; };
@@ -26,6 +27,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		755D690A2A96B12D000F7BB6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		755D69102A96B837000F7BB6 /* URL+TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+TestData.swift"; sourceTree = "<group>"; };
 		75B29ADB2A940EEF00C53FDF /* Dejavu */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Dejavu; path = ..; sourceTree = "<group>"; };
 		75E1326D2A941F0E00BBE467 /* Examples.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Examples.entitlements; sourceTree = "<group>"; };
 		75EDE9AA2A8FE62200DDAC12 /* Examples.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Examples.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -56,6 +59,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		755D690D2A96B7FC000F7BB6 /* Test Support */ = {
+			isa = PBXGroup;
+			children = (
+				755D690E2A96B807000F7BB6 /* Extensions */,
+			);
+			path = "Test Support";
+			sourceTree = "<group>";
+		};
+		755D690E2A96B807000F7BB6 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				755D690F2A96B819000F7BB6 /* Foundation */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		755D690F2A96B819000F7BB6 /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
+				755D69102A96B837000F7BB6 /* URL+TestData.swift */,
+			);
+			path = Foundation;
+			sourceTree = "<group>";
+		};
 		75B29ADC2A9414B000C53FDF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -86,6 +113,7 @@
 		75EDE9AC2A8FE62200DDAC12 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
+				755D690A2A96B12D000F7BB6 /* Info.plist */,
 				75E1326D2A941F0E00BBE467 /* Examples.entitlements */,
 				75EDE9AD2A8FE62200DDAC12 /* ExamplesApp.swift */,
 				75EDE9B12A8FE62500DDAC12 /* Assets.xcassets */,
@@ -105,6 +133,7 @@
 		75EDE9BD2A8FE62500DDAC12 /* ExamplesTests */ = {
 			isa = PBXGroup;
 			children = (
+				755D690D2A96B7FC000F7BB6 /* Test Support */,
 				75EDE9BE2A8FE62500DDAC12 /* ExamplesTests.swift */,
 			);
 			path = ExamplesTests;
@@ -225,6 +254,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75EDE9BF2A8FE62500DDAC12 /* ExamplesTests.swift in Sources */,
+				755D69112A96B837000F7BB6 /* URL+TestData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +394,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Examples/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Examples/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -398,6 +429,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Examples/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Examples/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
