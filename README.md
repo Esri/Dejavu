@@ -11,9 +11,9 @@
 	<img src="https://img.shields.io/badge/swift-5.7-orange">
 </p>
 
-### Usage
+### Usage Overview
 
-#### Network Interception and Observation
+#### 1. Prepare network interception and observation
 
 Dejavu can be configured to use custom network interceptors and observers. These can be specified when creating the `DejavuConfiguration`.  However, you may choose to use the defaults. The defaults use `URLProtocol`, which does require setup, specifically to tell the `URLSession` you are using what `URLProtocol` classes to [use](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/1411050-protocolclasses).
 
@@ -49,9 +49,23 @@ DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [we
 }
 ```
 
-#### General Use
+#### 2. Record network requests
 
-Dejavu works in 4 modes:
+```swift
+let config = DejavuConfiguration(fileURL: URL, mode: .cleanRecord)
+Dejavu.startSession(configuration: config)
+```
+
+#### 3. Playback network requests
+
+```swift
+let config = DejavuConfiguration(fileURL: URL, mode: .playback)
+Dejavu.startSession(configuration: config)
+```
+
+#### 4. Other modes
+
+Dejavu has 4 modes:
 
 - `disabled` - Does nothing; requests and responses go out over the network as normal.
 
@@ -61,15 +75,6 @@ Dejavu works in 4 modes:
 
 - `playback` - Intercepts requests and gets the responses from the cache.
 
+### Example
 
-Recording:
-```swift
-let config = DejavuConfiguration(fileURL: dejavuURL, mode: .cleanRecord)
-Dejavu.startSession(configuration: config)
-```
-
-Playback:
-```swift
-let config = DejavuConfiguration(fileURL: dejavuURL, mode: .playback)
-Dejavu.startSession(configuration: config)
-```
+A full example of mocked network test can be found [here](ExamplesTests/ExamplesTests.swift).
