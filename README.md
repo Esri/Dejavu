@@ -1,7 +1,15 @@
-# Dejavu
+# <p align="center">Dejavu</p>
 
-- Mocking for Swift network requests
-- Stores requests/responses in a sqlite database
+<p align="center">
+    <strong>Mocking for Swift network requests</strong>
+    <br>
+    Stores requests/responses in a sqlite database
+</p>
+
+<p align="center">
+	<img src="https://img.shields.io/badge/license-Apache-blue">
+	<img src="https://img.shields.io/badge/swift-5.7-orange">
+</p>
 
 ### Usage
 
@@ -45,24 +53,14 @@ DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [we
 
 Dejavu works in 4 modes:
 
-- disabled
-- cleanRecord
-- supplementalRecord
-- playback
+- `disabled` - Does nothing; requests and responses go out over the network as normal.
 
-##### disabled mode
-Does nothing - requests and responses go out over the network as normal.
+- `cleanRecord` - First deletes the cache, then records any network traffic to the cache.
+ 
+- `supplementalRecord` - Records any network traffic to the cache. Does not delete the database first.
 
-##### cleanRecord mode
-First deletes the cache, then records any network traffic to the cache.
+- `playback` - Intercepts requests and gets the responses from the cache.
 
-##### supplementalRecord mode
-Records any network traffic to the cache. Does not delete the database first.
-
-##### playback
-Intercepts requests and gets the responses from the cache.
-
-##### Sample Code
 
 Recording:
 ```swift
