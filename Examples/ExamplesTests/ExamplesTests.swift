@@ -19,9 +19,7 @@ final class ExamplesTests: XCTestCase {
     override func setUp() {
         let config = DejavuConfiguration(
             fileURL: .testDataDirectory.appendingPathComponent(mockDataSubpath),
-            mode: .playback,
-            networkObserver: DejavuURLProtocolNetworkObserver.shared,
-            networkInterceptor: DejavuURLProtocolNetworkInterceptor.shared
+            mode: .playback
         )
         
         DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
