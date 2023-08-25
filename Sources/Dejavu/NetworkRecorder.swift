@@ -98,12 +98,12 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
                 return
             }
             
-            guard let mbRequest = try? Request(request: request, configuration: session.configuration) else {
+            guard let dejavuRequest = try? Request(request: request, configuration: session.configuration) else {
                 return
             }
             
-            let instance = session.register(request: mbRequest)
-            transactions[identifier] = Transaction(request: request, dejavuRequest: mbRequest, instanceCount: instance)
+            let instance = session.register(request: dejavuRequest)
+            transactions[identifier] = Transaction(request: request, dejavuRequest: dejavuRequest, instanceCount: instance)
         }
     }
     
