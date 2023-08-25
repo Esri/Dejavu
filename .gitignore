@@ -9,7 +9,6 @@ DerivedData/
 .netrc
 
 # Examples Project
-/*.xcodeproj
 .swiftpm/xcode/xcuserdata/*
 Examples/Examples.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 Examples/Examples.xcodeproj/project.xcworkspace/xcuserdata/*
