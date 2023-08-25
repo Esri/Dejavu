@@ -68,6 +68,6 @@ struct LoggingCategory: OptionSet, CustomDebugStringConvertible {
 
 internal func log(_ s: String, _ category: LoggingCategory) {
     if !loggingIncludes.isDisjoint(with: category) {
-        print("[mb] \(category) - \(s)")
+        print("[Dejavu] \(category) - \(s)")
     }
 }
