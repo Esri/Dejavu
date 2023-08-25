@@ -49,7 +49,13 @@ let config = DejavuConfiguration(fileURL: URL, mode: .playback)
 Dejavu.startSession(configuration: config)
 ```
 
-#### 4. Other modes
+#### 4. End the session
+
+```swift
+Dejavu.endSession()
+```
+
+#### 5. Explore other modes
 
 Dejavu has 4 modes:
 
