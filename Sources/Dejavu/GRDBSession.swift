@@ -250,8 +250,8 @@ class GRDBSession: SessionInternal {
                     
                     let response = responseRecord.toHTTPURLResponse(url: request.originalUrl)
                     completion(response, responseRecord.data, responseRecord.error)
-                } catch let mbError as DejavuError {
-                    completion(nil, nil, mbError)
+                } catch let dejavuError as DejavuError {
+                    completion(nil, nil, dejavuError)
                 } catch let error as NSError {
                     completion(nil, nil, DejavuError.failedToFetchResponseInCache(error))
                 }
