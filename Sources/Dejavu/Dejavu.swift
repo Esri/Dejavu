@@ -46,20 +46,20 @@ public enum Dejavu {
     
     /// Sets url protocol registration handler for the network observer and interceptor.
     public static func setURLProtocolRegistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
-        DejavuURLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { (protocolClass : AnyClass) in
+        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { (protocolClass : AnyClass) in
             handler(protocolClass)
         }
-        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { (protocolClass : AnyClass) in
             handler(protocolClass)
         }
     }
     
     /// Sets url protocol unregistration handler for the network observer and interceptor.
     public static func setURLProtocolUnregistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
-        DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { (protocolClass : AnyClass) in
+        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { (protocolClass : AnyClass) in
             handler(protocolClass)
         }
-        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { (protocolClass : AnyClass) in
             handler(protocolClass)
         }
     }
