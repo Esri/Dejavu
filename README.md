@@ -11,6 +11,10 @@
 	<img src="https://img.shields.io/badge/swift-5.7-orange">
 </p>
 
+### One time setup
+
+Configure a location to store mocked data. Detailed instructions for this can be found [here](./AdditionalDocumentation/MockedDataSetupInstructions.md).
+
 ### Usage Overview
 
 #### 1. Prepare network interception and observation
