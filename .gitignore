@@ -8,12 +8,6 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
-# Examples Project
-.swiftpm/xcode/xcuserdata/*
-Examples/Examples.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
-Examples/Examples.xcodeproj/project.xcworkspace/xcuserdata/*
-Examples/Examples.xcodeproj/xcuserdata/*
-
 # Other
 Package.pins
 Package.resolved
