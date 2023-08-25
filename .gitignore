@@ -1,12 +1,14 @@
+# SPM Default List
 .DS_Store
 /.build
-xcuserdata/
-/*.xcodeproj
-DerivedData/
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-
-## Swift Package Manager
-# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
 Packages/
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Other
+/*.xcodeproj
 Package.pins
 Package.resolved
