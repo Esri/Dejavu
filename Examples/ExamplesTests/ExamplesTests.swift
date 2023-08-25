@@ -22,26 +22,26 @@ final class ExamplesTests: XCTestCase {
             mode: .playback
         )
         
-        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
             guard let self = self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
             self.session = URLSession(configuration: config)
         }
         
-        DejavuURLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
             guard let self = self else { return }
             self.session = URLSession(configuration: .default)
         }
         
-        DejavuURLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
             guard let self = self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
             self.session = URLSession(configuration: config)
         }
         
-        DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
             guard let self = self else { return }
             self.session = URLSession(configuration: .default)
         }
