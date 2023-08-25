@@ -30,7 +30,7 @@ public protocol DejavuNetworkObservationHandler {
 class NetworkRecorder {
     private struct Transaction {
         var request: URLRequest
-        var mbRequest: Request
+        var dejavuRequest: Request
         var instanceCount: Int
         var response: URLResponse?
         var data: Data?
@@ -73,7 +73,7 @@ class NetworkRecorder {
                 // just the response.
                 while let (_, transaction) = transactions.popFirst() {
                     session.record(
-                        request: transaction.mbRequest,
+                        request: transaction.dejavuRequest,
                         instanceCount: transaction.instanceCount,
                         response: transaction.response as? HTTPURLResponse,
                         data: transaction.data,
@@ -103,7 +103,7 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
             }
             
             let instance = session.register(request: mbRequest)
-            transactions[identifier] = Transaction(request: request, mbRequest: mbRequest, instanceCount: instance)
+            transactions[identifier] = Transaction(request: request, dejavuRequest: mbRequest, instanceCount: instance)
         }
     }
     
@@ -139,12 +139,12 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
                 t.data = session.configuration.normalizeJsonData(data: responseBody, mode: .response) ?? responseBody
                 // record the response
                 let response = t.response as? HTTPURLResponse
-                session.record(request: t.mbRequest, instanceCount: t.instanceCount, response: response, data: t.data, error: nil)
+                session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: t.data, error: nil)
             case .failure(let error):
                 log("loadingFailed: \(identifier)", .recording)
                 t.error = error
                 let response = t.response as? HTTPURLResponse
-                session.record(request: t.mbRequest, instanceCount: t.instanceCount, response: response, data: nil, error: error as NSError)
+                session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: nil, error: error as NSError)
             }
         }
     }
