@@ -12,6 +12,7 @@
 // limitations under the License.
 
 import Foundation
+import OSLog
 
 private let loggingIncludes: LoggingCategory = [.level2]
 
@@ -66,8 +67,24 @@ struct LoggingCategory: OptionSet, CustomDebugStringConvertible {
     static let level2: LoggingCategory = [.warning, .error]
 }
 
-internal func log(_ s: String, _ category: LoggingCategory) {
+internal func log(_ s: String, _ category: LoggingCategory, _ file: String = #file) {
     if !loggingIncludes.isDisjoint(with: category) {
-        print("[Dejavu] \(category) - \(s)")
+        // The name of the file where the log originated.
+        let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
+        let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
+        
+        let level = category.intersection([.info, .warning, .error])
+        let messageType = category.subtracting(level).debugDescription
+        
+        switch level {
+        case .info:
+            logger.info("\(messageType) - \(s)")
+        case .warning:
+            logger.warning("\(messageType) - \(s)")
+        case .error:
+            logger.error("\(messageType) - \(s)")
+        default:
+            logger.notice("\(messageType) - \(s)")
+        }
     }
 }
