@@ -56,7 +56,7 @@ class Player: DejavuNetworkInterceptionHandler {
     ) {
         serialQueue.async {
             guard let session = Dejavu.currentSession as? SessionInternal else {
-                log("startLoading called with no session", .warning)
+                log("startLoading called with no session", type: .error)
                 return
             }
             

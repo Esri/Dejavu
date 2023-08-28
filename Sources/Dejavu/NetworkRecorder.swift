@@ -62,7 +62,7 @@ class NetworkRecorder {
             networkObserver.stopObserving()
             
             if !transactions.isEmpty {
-                log("disabled recorder while waiting on requests to finish...", [.recording, .warning])
+                log("disabled recorder while waiting on requests to finish...", .recording, type: .error)
                 
                 // If here, then the network recorder was disabled before all requests had the
                 // chance to finish.
@@ -91,7 +91,7 @@ class NetworkRecorder {
 extension NetworkRecorder: DejavuNetworkObservationHandler {
     func requestWillBeSent(identifier: String, request: URLRequest) {
         serialQueue.sync {
-            log("requesting: \(request.url?.absoluteString ?? "")", [.info, .requesting])
+            log("requesting: \(request.url?.absoluteString ?? "")", .requesting, type: .info)
             log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", .recording)
             
             guard let session = self.session else {

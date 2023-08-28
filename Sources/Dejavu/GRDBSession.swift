@@ -30,7 +30,7 @@ class GRDBSession: SessionInternal {
     private var dbQueue: DatabaseQueue?
     
     required init(configuration: DejavuConfiguration) {
-        log("Initializing Dejavu GRDB session: \(configuration.fileURL)", [.info, .beginEndSession])
+        log("Initializing Dejavu GRDB session: \(configuration.fileURL)", .beginSession, type: .info)
         
         self.configuration = configuration
         
@@ -174,7 +174,7 @@ class GRDBSession: SessionInternal {
                         try responseRecord.insert(db)
                     }
                 } catch let error as NSError {
-                    log("error inserting record: \(error)", .error)
+                    log("error inserting record: \(error)", type: .error)
                 }
             }
         }
@@ -183,7 +183,7 @@ class GRDBSession: SessionInternal {
     // swiftlint:disable cyclomatic_complexity
     
     func fetch(request: Request, completion: @escaping (URLResponse?, Data?, Error?) -> Void ) {
-        log("requesting: \(request.url)", [.info, .requesting])
+        log("requesting: \(request.url)", .requesting, type: .info)
         
         GRDBSession.serialQueue.async {
             guard let dbQueue = self.dbQueue else {
@@ -202,7 +202,7 @@ class GRDBSession: SessionInternal {
                         // one in the cache that is authenticated in a different way
                         foundRecord = try self.findOtherAuthenticatedRequest(database: db, request: request, instanceCount: instanceCount)
                         if foundRecord != nil {
-                            log("could only find version of this request that was authenticated as well, but in a different way: \(request.originalUrl)", [.matchingRequests, .warning])
+                            log("could only find version of this request that was authenticated as well, but in a different way: \(request.originalUrl)", .matchingRequests, type: .error)
                         }
                     }
                     
@@ -210,7 +210,7 @@ class GRDBSession: SessionInternal {
                         // if still can't find, then search for un-authenticated version of the request
                         foundRecord = try self.findUnauthenticatedRequest(database: db, request: request, instanceCount: instanceCount)
                         if foundRecord != nil {
-                            log("could only find unauthenticated version of this request: \(request.originalUrl)", [.matchingRequests, .warning])
+                            log("could only find unauthenticated version of this request: \(request.originalUrl)", .matchingRequests, type: .error)
                         }
                     }
                     
@@ -218,7 +218,7 @@ class GRDBSession: SessionInternal {
                         // if still can't find, then check to see if it is a URL where the instanceCount can be ignored
                         if self.configuration.urlsToIgnoreInstanceCount.contains(request.url) {
                             foundRecord = try self.findRequest(database: db, request: request, instanceCount: instanceCount, requireMatchedInstance: false)
-                            log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", [.matchingRequests, .warning])
+                            log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", .matchingRequests, type: .error)
                         }
                     }
                     
@@ -230,7 +230,7 @@ class GRDBSession: SessionInternal {
                             return
                         }
                         
-                        log("cannot find request in cache: \(request.originalUrl), instanceCount: \(instanceCount), hash: \(request.hashString), hca: \(request.headersContainAuthentication), qca: \(request.queryContainsAuthentication), bca: \(request.bodyContainsAuthentication), method: \(request.method ?? "null")", [.matchingRequests, .warning])
+                        log("cannot find request in cache: \(request.originalUrl), instanceCount: \(instanceCount), hash: \(request.hashString), hca: \(request.headersContainAuthentication), qca: \(request.queryContainsAuthentication), bca: \(request.bodyContainsAuthentication), method: \(request.method ?? "null")", .matchingRequests, type: .error)
                         log("  - query \(request.originalUrl.query?.removingPercentEncoding ?? "") ", .matchingRequests)
                         var info: [AnyHashable: Any] = ["URL": request.url]
                         if let query = request.query {
@@ -454,7 +454,7 @@ class GRDBSession: SessionInternal {
         GRDBSession.serialQueue.sync {
             // Release any database memory
             self.dbQueue?.releaseMemory()
-            log("Ending Dejavu GRDB session: \(self.configuration.fileURL)", [.info, .beginEndSession])
+            log("Ending Dejavu GRDB session: \(self.configuration.fileURL)", .endSession, type: .info)
         }
     }
     
