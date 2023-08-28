@@ -62,7 +62,7 @@ class NetworkRecorder {
             networkObserver.stopObserving()
             
             if !transactions.isEmpty {
-                log("disabled recorder while waiting on requests to finish...", .recording, type: .error)
+                log("disabled recorder while waiting on requests to finish...", category: .recording, type: .error)
                 
                 // If here, then the network recorder was disabled before all requests had the
                 // chance to finish.
@@ -91,8 +91,8 @@ class NetworkRecorder {
 extension NetworkRecorder: DejavuNetworkObservationHandler {
     func requestWillBeSent(identifier: String, request: URLRequest) {
         serialQueue.sync {
-            log("requesting: \(request.url?.absoluteString ?? "")", .requesting, type: .info)
-            log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", .recording)
+            log("requesting: \(request.url?.absoluteString ?? "")", category: .requesting, type: .info)
+            log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", category: .recording)
             
             guard let session = self.session else {
                 return
@@ -109,7 +109,7 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
     
     func responseReceived(identifier: String, response: URLResponse) {
         serialQueue.sync {
-            log("responseReceived: \(identifier)", .recording)
+            log("responseReceived: \(identifier)", category: .recording)
             guard var t = transactions[identifier] else {
                 return
             }
@@ -134,14 +134,14 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
             
             switch result {
             case .success(let responseBody):
-                log("loadingFinished: \(identifier)", .recording)
+                log("loadingFinished: \(identifier)", category: .recording)
                 // normalize the response
                 t.data = session.configuration.normalizeJsonData(data: responseBody, mode: .response) ?? responseBody
                 // record the response
                 let response = t.response as? HTTPURLResponse
                 session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: t.data, error: nil)
             case .failure(let error):
-                log("loadingFailed: \(identifier)", .recording)
+                log("loadingFailed: \(identifier)", category: .recording)
                 t.error = error
                 let response = t.response as? HTTPURLResponse
                 session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: nil, error: error as NSError)

@@ -31,12 +31,12 @@ enum LoggingCategory: String {
     case requesting
 }
 
-internal func log(_ s: String, _ loggingCategory: LoggingCategory? = nil, type: OSLogType = .debug, _ file: String = #file) {
+internal func log(_ s: String, category: LoggingCategory? = nil, type: OSLogType = .debug, _ file: String = #file) {
     // The name of the file where the log originated.
     let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
     let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
     
-    let category = loggingCategory != nil ? "[\(loggingCategory!)] - " : ""
+    let category = category != nil ? "[\(category!)] - " : ""
     
     switch type {
     case .debug:

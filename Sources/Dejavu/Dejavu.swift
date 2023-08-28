@@ -39,7 +39,7 @@ public enum Dejavu {
             break
         }
         
-        log("Dejavu session started", .beginSession, type: .info)
+        log("Dejavu session started", category: .beginSession, type: .info)
         
         return session
     }
@@ -66,6 +66,6 @@ public enum Dejavu {
         // call end on session
         (session as? SessionInternal)?.end()
         
-        log("Dejavu session ended", .endSession, type: .info)
+        log("Dejavu session ended", category: .endSession, type: .info)
     }
 }
