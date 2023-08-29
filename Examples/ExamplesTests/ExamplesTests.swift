@@ -31,7 +31,7 @@ final class ExamplesTests: XCTestCase {
         
         let config = DejavuConfiguration(
             fileURL: .testDataDirectory.appendingPathComponent(mockDataSubpath),
-            mode: .cleanRecord
+            mode: .playback
         )
         
         Dejavu.startSession(configuration: config)
