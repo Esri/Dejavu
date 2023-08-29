@@ -17,15 +17,15 @@ import XCTest
 
 final class ExamplesTests: XCTestCase {
     override func setUp() {
-        Dejavu.setURLProtocolRegistrationHandler { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
+        Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
+            guard let self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
             self.session = URLSession(configuration: config)
         }
         
-        Dejavu.setURLProtocolUnregistrationHandler { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
+        Dejavu.setURLProtocolUnregistrationHandler { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
             self.session = URLSession(configuration: .default)
         }
         
