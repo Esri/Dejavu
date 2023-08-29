@@ -67,7 +67,7 @@ struct LoggingCategory: OptionSet, CustomDebugStringConvertible {
     static let level2: LoggingCategory = [.warning, .error]
 }
 
-internal func log(_ s: String, _ category: LoggingCategory, _ file: String = #file) {
+func log(_ s: String, _ category: LoggingCategory, _ file: String = #file) {
     if !loggingIncludes.isDisjoint(with: category) {
         // The name of the file where the log originated.
         let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
