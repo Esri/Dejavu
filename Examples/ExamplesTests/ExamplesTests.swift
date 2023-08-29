@@ -29,9 +29,8 @@ final class ExamplesTests: XCTestCase {
             self.session = URLSession(configuration: config)
         }
         
-        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
-            self.session = URLSession(configuration: .default)
+        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
         }
         
         URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
@@ -41,9 +40,8 @@ final class ExamplesTests: XCTestCase {
             self.session = URLSession(configuration: config)
         }
         
-        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
-            self.session = URLSession(configuration: .default)
+        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
         }
         
         Dejavu.startSession(configuration: config)
