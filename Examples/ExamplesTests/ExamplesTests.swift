@@ -25,7 +25,8 @@ final class ExamplesTests: XCTestCase {
         }
         
         Dejavu.setURLProtocolUnregistrationHandler { [weak self] protocolClass in
-            self?.session = URLSession(configuration: .default)
+            guard let self else { return }
+            self.session = URLSession(configuration: .default)
             self.session = URLSession(configuration: .default)
         }
         
