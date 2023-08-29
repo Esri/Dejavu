@@ -17,8 +17,8 @@ import XCTest
 
 final class ExamplesTests: XCTestCase {
     override func setUp() {
-        Dejavu.setURLProtocolRegistrationHandler { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
+        Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
+            guard let self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
             self.session = URLSession(configuration: config)
