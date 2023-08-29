@@ -22,7 +22,7 @@ final class ExamplesTests: XCTestCase {
             mode: .playback
         )
         
-        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
             guard let self = self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
@@ -33,7 +33,7 @@ final class ExamplesTests: XCTestCase {
             self?.session = URLSession(configuration: .default)
         }
         
-        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
             guard let self = self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
