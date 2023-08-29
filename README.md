@@ -24,32 +24,30 @@ Dejavu can be configured to use custom network interceptors and observers. These
 To do this, you will need to set the `urlProtocolRegistrationHandler` and `urlProtocolUnregistrationHandler` on `DejavuURLProtocolNetworkInterceptor.shared` and `DejavuURLProtocolNetworkObserver.shared`. This is an example of how to wire that up:
 
 ```swift
-// Register the interceptor
-DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+// Register the interceptor.
+DejavuURLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
     guard let self = self else { return }
     let config = URLSessionConfiguration.default
     config.protocolClasses = [protocolClass]
     self.session = URLSession(configuration: config)
 }
 
-// Register the observer
-DejavuURLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+// Register the observer.
+DejavuURLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
     guard let self = self else { return }
     let config = URLSessionConfiguration.default
     config.protocolClasses = [protocolClass]
     self.session = URLSession(configuration: config)
 }
 
-// Unregister the interceptor
-DejavuURLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-    guard let self = self else { return }
-    self.session = URLSession(configuration: .default)
+// Unregister the interceptor.
+DejavuURLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+    self?.session = URLSession(configuration: .default)
 }
 
-// Unregister the observer
-DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-    guard let self = self else { return }
-    self.session = URLSession(configuration: .default)
+// Unregister the observer.
+DejavuURLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+    self?.session = URLSession(configuration: .default)
 }
 ```
 
