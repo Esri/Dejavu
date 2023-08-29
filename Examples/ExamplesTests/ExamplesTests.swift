@@ -22,28 +22,26 @@ final class ExamplesTests: XCTestCase {
             mode: .playback
         )
         
-        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
+        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
+            guard let self else { return }
+            let config = URLSessionConfiguration.default
+            config.protocolClasses = [protocolClass]
+            self.session = URLSession(configuration: config)
+        }
+        
+        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
+        }
+        
+        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
             guard let self = self else { return }
             let config = URLSessionConfiguration.default
             config.protocolClasses = [protocolClass]
             self.session = URLSession(configuration: config)
         }
         
-        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
-            self.session = URLSession(configuration: .default)
-        }
-        
-        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
-            let config = URLSessionConfiguration.default
-            config.protocolClasses = [protocolClass]
-            self.session = URLSession(configuration: config)
-        }
-        
-        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] (protocolClass : AnyClass) in
-            guard let self = self else { return }
-            self.session = URLSession(configuration: .default)
+        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
         }
         
         Dejavu.startSession(configuration: config)
