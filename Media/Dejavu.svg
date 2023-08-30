@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="76px" height="76px" viewBox="0 0 76 76" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Dejavu</title>
+    <g id="Dejavu" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Logo" transform="translate(2, 11)">
+            <g id="Group" opacity="0.499116443">
+                <path d="M14.8172764,44.020476 C19.7907728,50.1096529 27.3764634,54 35.875,54 C50.8557238,54 63,41.9116882 63,27 C63,12.0883118 50.8557238,0 35.875,0 C20.8942762,0 8.75,12.0883118 8.75,27" id="Path" stroke="#007AFF" stroke-width="5" stroke-linecap="round"></path>
+                <path d="M10.0688464,27.7701797 L14.9704149,33.3900426 C15.605697,34.1184213 15.5302273,35.2238869 14.8018485,35.859169 C14.483118,36.1371615 14.0744975,36.2903226 13.6515685,36.2903226 L3.84843148,36.2903226 C2.88193317,36.2903226 2.09843148,35.5068209 2.09843148,34.5403226 C2.09843148,34.1173936 2.25159261,33.7087731 2.52958507,33.3900426 L7.43115359,27.7701797 C8.06643571,27.0418009 9.17190127,26.9663312 9.90028003,27.6016133 C9.96023503,27.6539052 10.0165545,27.7102247 10.0688464,27.7701797 Z" id="Triangle" fill="#007AFF" transform="translate(8.75, 31.2742) scale(1, -1) translate(-8.75, -31.2742)"></path>
+            </g>
+            <line x1="26.6" y1="39.1935484" x2="26.6" y2="15.6561762" id="Arrow-Tail" stroke="#007AFF" stroke-width="4" stroke-linecap="round"></line>
+            <polyline id="Arrow-Head" stroke="#007AFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="19.25 22.4539732 26.6 14.8064516 33.95 22.4539732"></polyline>
+            <line x1="44.8" y1="38.3438238" x2="44.8" y2="14.8064516" id="Arrow-Tail" stroke="#007AFF" stroke-width="4" stroke-linecap="round" transform="translate(44.8, 26.5751) scale(1, -1) translate(-44.8, -26.5751)"></line>
+            <polyline id="Arrow-Head" stroke="#007AFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" transform="translate(44.8, 35.3698) scale(1, -1) translate(-44.8, -35.3698)" points="37.45 39.1935484 44.8 31.5460268 52.15 39.1935484"></polyline>
+        </g>
+    </g>
+</svg>
