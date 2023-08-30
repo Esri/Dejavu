@@ -1,6 +1,8 @@
 # <p align="center">Dejavu</p>
 
 <p align="center">
+    <img width="25%" src="/Media/Dejavu.png">
+    <br>
     <strong>Mocking for Swift network requests</strong>
     <br>
     Stores requests/responses in a sqlite database
