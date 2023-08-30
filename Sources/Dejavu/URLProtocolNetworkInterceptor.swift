@@ -42,8 +42,8 @@ public class URLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
         urlProtocolUnregistrationHandler?(cls)
     }
     
-    public var urlProtocolRegistrationHandler: ((AnyClass) -> Void)?
-    public var urlProtocolUnregistrationHandler: ((AnyClass) -> Void)?
+    var urlProtocolRegistrationHandler: ((AnyClass) -> Void)?
+    var urlProtocolUnregistrationHandler: ((AnyClass) -> Void)?
 }
 
 class InterceptorURLProtocol: URLProtocol {

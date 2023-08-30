@@ -17,32 +17,21 @@ import XCTest
 
 final class ExamplesTests: XCTestCase {
     override func setUp() {
+        Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
+            guard let self else { return }
+            let config = URLSessionConfiguration.default
+            config.protocolClasses = [protocolClass]
+            self.session = URLSession(configuration: config)
+        }
+        
+        Dejavu.setURLProtocolUnregistrationHandler { [weak self] protocolClass in
+            self?.session = URLSession(configuration: .default)
+        }
+        
         let config = DejavuConfiguration(
             fileURL: .testDataDirectory.appendingPathComponent(mockDataSubpath),
             mode: .playback
         )
-        
-        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
-            guard let self = self else { return }
-            let config = URLSessionConfiguration.default
-            config.protocolClasses = [protocolClass]
-            self.session = URLSession(configuration: config)
-        }
-        
-        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
-            self?.session = URLSession(configuration: .default)
-        }
-        
-        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = { [weak self] protocolClass in
-            guard let self = self else { return }
-            let config = URLSessionConfiguration.default
-            config.protocolClasses = [protocolClass]
-            self.session = URLSession(configuration: config)
-        }
-        
-        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = { [weak self] protocolClass in
-            self?.session = URLSession(configuration: .default)
-        }
         
         Dejavu.startSession(configuration: config)
     }
