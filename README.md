@@ -20,7 +20,7 @@ Dejavu can be configured to use custom network interceptors and observers. These
 To do this, you will need to set `urlProtocolRegistrationHandler` and `urlProtocolUnregistrationHandler` on `URLProtocolNetworkInterceptor.shared` and `URLProtocolNetworkObserver.shared`. The registration and unregistration handlers can be set for both the observer and interceptor in one call each. This is an example of how to wire that up:
 
 ```swift
-// Set the protocol registration handlers.
+// Set the protocol registration handler.
 Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
     guard let self else { return }
     let config = URLSessionConfiguration.default
