@@ -15,7 +15,7 @@ import Foundation.NSURLProtocol
 
 public enum Dejavu {
     /// The current session.
-    public static var currentSession: DejavuSession?
+    public private(set) static var currentSession: DejavuSession?
     
     @discardableResult
     /// Starts a new Dejavu session.
