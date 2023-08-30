@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.7
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // Copyright 2023 Esri.
 
@@ -18,8 +18,8 @@ import PackageDescription
 let package = Package(
     name: "Dejavu",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v14)
+        .iOS(.v15),
+        .macCatalyst(.v15)
     ],
     products: [
         .library(
