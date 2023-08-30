@@ -19,7 +19,7 @@ Configure a location to store mocked data. Detailed instructions for this can be
 
 Dejavu can be configured to use custom network interceptors and observers. These can be specified when creating the `DejavuConfiguration`.  However, you may choose to use the defaults. The defaults use `URLProtocol`, which does require setup, specifically to tell the `URLSession` you are using what `URLProtocol` classes to [use](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/1411050-protocolclasses).
 
-To do this, you will need to set a url protocol registration and unregistration handler for the
+To do this, you will need to set a URL protocol registration and unregistration handler for the
 interceptor and observer. This is an example of how to wire that up:
 
 ```swift
