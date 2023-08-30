@@ -28,7 +28,7 @@ Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
     self.session = URLSession(configuration: config)
 }
 
-// Set the protocol unregistration handlers.
+// Set the protocol unregistration handler.
 Dejavu.setURLProtocolUnregistrationHandler { [weak self] protocolClass in
     self?.session = URLSession(configuration: .default)
 }
