@@ -1,7 +1,7 @@
 # <p align="center">Dejavu</p>
 
 <p align="center">
-    <img width="25%" src="/Media/Dejavu.png">
+    <img width="25%" src="/Media/Dejavu~1000x1000.png">
     <br>
     <strong>Mocking for Swift network requests</strong>
     <br>
