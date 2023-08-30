@@ -1,15 +1,13 @@
-# <p align="center">Dejavu</p>
-
-<p align="center">
+<div align="center">
+    <img width="25%" src="/Media/Dejavu~1000x1000.png">
+    <h1>Dejavu</h1>
     <strong>Mocking for Swift network requests</strong>
     <br>
-    Stores requests/responses in a sqlite database
-</p>
-
-<p align="center">
-	<img src="https://img.shields.io/badge/license-Apache-blue">
-	<img src="https://img.shields.io/badge/swift-5.7-orange">
-</p>
+    <p>Stores requests/responses in a sqlite database</p>
+    <br>
+    <img src="https://img.shields.io/badge/license-Apache-blue">
+    <img src="https://img.shields.io/badge/swift-5.7-orange">
+</div>
 
 ### One time setup
 
