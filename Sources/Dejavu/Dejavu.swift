@@ -44,6 +44,18 @@ public enum Dejavu {
         return session
     }
     
+    /// Sets url protocol registration handler for the network observer and interceptor.
+    public static func setURLProtocolRegistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
+        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = handler
+        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = handler
+    }
+    
+    /// Sets url protocol unregistration handler for the network observer and interceptor.
+    public static func setURLProtocolUnregistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
+        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = handler
+        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = handler
+    }
+    
     /// Ends the current Dejavu session.
     public static func endSession() {
         guard let session = currentSession else {
