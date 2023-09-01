@@ -42,7 +42,7 @@ func log(
     let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
     let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
     
-    let category = category != nil ? "[\(category!)] - " : ""
+    let category = category.map { "[\($0)] - " } ?? ""
     
     switch type {
     case .debug:
