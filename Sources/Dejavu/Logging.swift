@@ -15,15 +15,15 @@ import Foundation
 import OSLog
 
 enum LoggingCategory: String {
-    /// Matching requests in the database
+    /// Matching requests in the database.
     case matchingRequests
-    /// Fine grained recording information
+    /// Fine grained recording information.
     case recording
-    /// Session begin
+    /// Session begin.
     case beginSession
-    /// Session end
+    /// Session end.
     case endSession
-    /// Requests as they go out (both playback/record modes)
+    /// Requests as they go out (both playback/record modes).
     case requesting
 }
 
