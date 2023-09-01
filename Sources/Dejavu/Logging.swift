@@ -17,16 +17,12 @@ import OSLog
 enum LoggingCategory: String {
     /// Matching requests in the database
     case matchingRequests
-    
     /// Fine grained recording information
     case recording
-    
     /// Session begin
     case beginSession
-    
     /// Session end
     case endSession
-    
     /// Requests as they go out (both playback/record modes)
     case requesting
 }
