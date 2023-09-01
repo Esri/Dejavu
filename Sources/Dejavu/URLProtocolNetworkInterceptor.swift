@@ -50,7 +50,7 @@ class InterceptorURLProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkInterceptor.shared.handler != nil
         if !hasHandler {
-            log("canInit called with no handler", .warning)
+            log("canInit called with no handler", type: .error)
         }
         return hasHandler
     }
@@ -61,7 +61,7 @@ class InterceptorURLProtocol: URLProtocol {
     
     override func startLoading() {
         guard let handler = URLProtocolNetworkInterceptor.shared.handler else {
-            log("canInit called with no handler", .warning)
+            log("canInit called with no handler", type: .error)
             return
         }
         

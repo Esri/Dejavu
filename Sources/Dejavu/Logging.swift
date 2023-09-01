@@ -12,62 +12,48 @@
 // limitations under the License.
 
 import Foundation
+import OSLog
 
-private let loggingIncludes: LoggingCategory = [.level2]
-
-struct LoggingCategory: OptionSet, CustomDebugStringConvertible {
-    let rawValue: Int
-    
-    static let info = LoggingCategory(rawValue: 1 << 0)
-    static let warning = LoggingCategory(rawValue: 1 << 1)
-    static let error = LoggingCategory(rawValue: 1 << 2)
-    
-    // for matching requests in the db
-    static let matchingRequests = LoggingCategory(rawValue: 1 << 3)
-    
-    // fine grained recording information
-    static let recording = LoggingCategory(rawValue: 1 << 4)
-    
-    static let beginEndSession = LoggingCategory(rawValue: 1 << 5)
-    
-    // for printing out the requests as they go out (both playback/record modes)
-    static let requesting = LoggingCategory(rawValue: 1 << 6)
-    
-    var debugDescription: String {
-        var arr = [String]()
-        
-        if self.contains(.info) {
-            arr.append("[info]")
-        }
-        if self.contains(.warning) {
-            arr.append("[warning]")
-        }
-        if self.contains(.error) {
-            arr.append("[error]")
-        }
-        if self.contains(.matchingRequests) {
-            arr.append("[matchingRequests]")
-        }
-        if self.contains(.recording) {
-            arr.append("[recording]")
-        }
-        if self.contains(.beginEndSession) {
-            arr.append("[beginEndSession]")
-        }
-        if self.contains(.requesting) {
-            arr.append("[requesting]")
-        }
-        
-        return arr.joined(separator: " ")
-    }
-    
-    static let all: LoggingCategory = [.info, .warning, .error, .matchingRequests, .recording, .beginEndSession, .requesting]
-    static let level1: LoggingCategory = [.warning, .error, .matchingRequests, .recording, .beginEndSession]
-    static let level2: LoggingCategory = [.warning, .error]
+enum LoggingCategory: String {
+    /// Matching requests in the database.
+    case matchingRequests
+    /// Fine grained recording information.
+    case recording
+    /// Session begin.
+    case beginSession
+    /// Session end.
+    case endSession
+    /// Requests as they go out (both playback/record modes).
+    case requesting
 }
 
-internal func log(_ s: String, _ category: LoggingCategory) {
-    if !loggingIncludes.isDisjoint(with: category) {
-        print("[mb] \(category) - \(s)")
+/// Writes a message to the log.
+/// - Parameters:
+///   - message: The message to write to the log.
+///   - category: The category the message belongs to.
+///   - type: The log level to use in the unified logging system.
+///   - file: The file containing the source that invoked the log.
+func log(
+    _ message: String,
+    category: LoggingCategory? = nil,
+    type: OSLogType = .debug,
+    _ file: String = #file
+) {
+    let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
+    let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
+    
+    let category = category.map { "[\($0)] - " } ?? ""
+    
+    switch type {
+    case .debug:
+        logger.debug("\(category)\(message)")
+    case .error:
+        logger.error("\(category)\(message)")
+    case .fault:
+        logger.fault("\(category)\(message)")
+    case .info:
+        logger.info("\(category)\(message)")
+    default:
+        logger.notice("\(category)\(message)")
     }
 }

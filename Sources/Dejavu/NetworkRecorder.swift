@@ -30,7 +30,7 @@ public protocol DejavuNetworkObservationHandler {
 class NetworkRecorder {
     private struct Transaction {
         var request: URLRequest
-        var mbRequest: Request
+        var dejavuRequest: Request
         var instanceCount: Int
         var response: URLResponse?
         var data: Data?
@@ -62,7 +62,7 @@ class NetworkRecorder {
             networkObserver.stopObserving()
             
             if !transactions.isEmpty {
-                log("disabled recorder while waiting on requests to finish...", [.recording, .warning])
+                log("disabled recorder while waiting on requests to finish...", category: .recording, type: .error)
                 
                 // If here, then the network recorder was disabled before all requests had the
                 // chance to finish.
@@ -73,7 +73,7 @@ class NetworkRecorder {
                 // just the response.
                 while let (_, transaction) = transactions.popFirst() {
                     session.record(
-                        request: transaction.mbRequest,
+                        request: transaction.dejavuRequest,
                         instanceCount: transaction.instanceCount,
                         response: transaction.response as? HTTPURLResponse,
                         data: transaction.data,
@@ -91,25 +91,25 @@ class NetworkRecorder {
 extension NetworkRecorder: DejavuNetworkObservationHandler {
     func requestWillBeSent(identifier: String, request: URLRequest) {
         serialQueue.sync {
-            log("requesting: \(request.url?.absoluteString ?? "")", [.info, .requesting])
-            log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", .recording)
+            log("requesting: \(request.url?.absoluteString ?? "")", category: .requesting, type: .info)
+            log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", category: .recording)
             
             guard let session = self.session else {
                 return
             }
             
-            guard let mbRequest = try? Request(request: request, configuration: session.configuration) else {
+            guard let dejavuRequest = try? Request(request: request, configuration: session.configuration) else {
                 return
             }
             
-            let instance = session.register(request: mbRequest)
-            transactions[identifier] = Transaction(request: request, mbRequest: mbRequest, instanceCount: instance)
+            let instance = session.register(request: dejavuRequest)
+            transactions[identifier] = Transaction(request: request, dejavuRequest: dejavuRequest, instanceCount: instance)
         }
     }
     
     func responseReceived(identifier: String, response: URLResponse) {
         serialQueue.sync {
-            log("responseReceived: \(identifier)", .recording)
+            log("responseReceived: \(identifier)", category: .recording)
             guard var t = transactions[identifier] else {
                 return
             }
@@ -134,17 +134,17 @@ extension NetworkRecorder: DejavuNetworkObservationHandler {
             
             switch result {
             case .success(let responseBody):
-                log("loadingFinished: \(identifier)", .recording)
+                log("loadingFinished: \(identifier)", category: .recording)
                 // normalize the response
                 t.data = session.configuration.normalizeJsonData(data: responseBody, mode: .response) ?? responseBody
                 // record the response
                 let response = t.response as? HTTPURLResponse
-                session.record(request: t.mbRequest, instanceCount: t.instanceCount, response: response, data: t.data, error: nil)
+                session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: t.data, error: nil)
             case .failure(let error):
-                log("loadingFailed: \(identifier)", .recording)
+                log("loadingFailed: \(identifier)", category: .recording)
                 t.error = error
                 let response = t.response as? HTTPURLResponse
-                session.record(request: t.mbRequest, instanceCount: t.instanceCount, response: response, data: nil, error: error as NSError)
+                session.record(request: t.dejavuRequest, instanceCount: t.instanceCount, response: response, data: nil, error: error as NSError)
             }
         }
     }

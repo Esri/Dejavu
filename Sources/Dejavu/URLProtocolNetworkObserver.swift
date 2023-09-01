@@ -51,7 +51,7 @@ class ObserverProtocol: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkObserver.shared.handler != nil
         if !hasHandler {
-            log("canInit called with no handler", .warning)
+            log("canInit called with no handler", type: .error)
         }
         return hasHandler
     }
@@ -62,7 +62,7 @@ class ObserverProtocol: URLProtocol {
     
     override func startLoading() {
         guard let handler = URLProtocolNetworkObserver.shared.handler else {
-            log("canInit called with no handler", .warning)
+            log("canInit called with no handler", type: .error)
             return
         }
         
