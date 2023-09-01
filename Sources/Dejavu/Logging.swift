@@ -29,9 +29,9 @@ enum LoggingCategory: String {
 
 /// Writes a message to the log.
 /// - Parameters:
-///   - message: The message to to write to the log.
+///   - message: The message to write to the log.
 ///   - category: The category the message belongs to.
-///   - type: The log level for the unified logging system.
+///   - type: The log level to use in the unified logging system.
 ///   - file: The file containing the source that invoked the log.
 func log(
     _ message: String,
