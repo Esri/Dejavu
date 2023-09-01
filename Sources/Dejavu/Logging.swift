@@ -27,8 +27,18 @@ enum LoggingCategory: String {
     case requesting
 }
 
-func log(_ s: String, category: LoggingCategory? = nil, type: OSLogType = .debug, _ file: String = #file) {
-    // The name of the file where the log originated.
+/// Writes a message to the log.
+/// - Parameters:
+///   - message: The message to to write to the log.
+///   - category: The category the message belongs to.
+///   - type: The log level for the unified logging system.
+///   - file: The file containing the source that invoked the log.
+func log(
+    _ message: String,
+    category: LoggingCategory? = nil,
+    type: OSLogType = .debug,
+    _ file: String = #file
+) {
     let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
     let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
     
@@ -36,14 +46,14 @@ func log(_ s: String, category: LoggingCategory? = nil, type: OSLogType = .debug
     
     switch type {
     case .debug:
-        logger.debug("\(category)\(s)")
+        logger.debug("\(category)\(message)")
     case .error:
-        logger.error("\(category)\(s)")
+        logger.error("\(category)\(message)")
     case .fault:
-        logger.fault("\(category)\(s)")
+        logger.fault("\(category)\(message)")
     case .info:
-        logger.info("\(category)\(s)")
+        logger.info("\(category)\(message)")
     default:
-        logger.notice("\(category)\(s)")
+        logger.notice("\(category)\(message)")
     }
 }
