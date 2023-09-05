@@ -75,7 +75,7 @@ A full example of a mocked network test can be found [here](Examples/ExamplesTes
 
 ## Issues
 
-Find a bug or want to request a new feature?  Please let us know by submitting an issue.
+Find a bug or want to request a new feature?  Please let us know by [submitting an issue](https://github.com/ArcGIS/Dejavu/issues/new).
 
 ## Contributing
 
