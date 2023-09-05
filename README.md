@@ -3,11 +3,18 @@
     <h1>Dejavu</h1>
     <strong>Mocking for Swift network requests</strong>
     <br>
-    <p>Stores requests/responses in a sqlite database</p>
     <br>
     <img src="https://img.shields.io/badge/license-Apache-blue">
     <img src="https://img.shields.io/badge/swift-5.7-orange">
 </div>
+
+Use Dejavu to mock network requests in Swift tests making them faster and more reliable. First use Dejavu to record network activity. From then on Dejavu can playback the original network request, exactly as it ran the first time. Dejavu stores requests and responses in a sqlite database.
+
+## Example
+
+A full example of a mocked network test can be found [here](Examples/ExamplesTests/ExamplesTests.swift).
+
+## Instructions
 
 ### One time setup
 
@@ -69,6 +76,33 @@ Dejavu has 4 modes:
 
 - `playback` - Intercepts requests and gets the responses from the cache.
 
-### Example
+## Requirements
 
-A full example of mocked network test can be found [here](Examples/ExamplesTests/ExamplesTests.swift).
+* Swift 5.7
+* iOS 15
+* Xcode 14.1
+
+## Issues
+
+Find a bug or want to request a new feature?  Please let us know by [submitting an issue](https://github.com/ArcGIS/Dejavu/issues/new).
+
+## Contributing
+
+Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
+
+## Licensing
+Copyright 2023 Esri
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+A copy of the license is available in the repository's [LICENSE.txt](LICENSE.txt) file.
