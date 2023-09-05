@@ -71,7 +71,7 @@ Dejavu has 4 modes:
 
 ## Example
 
-A full example of mocked network test can be found [here](Examples/ExamplesTests/ExamplesTests.swift).
+A full example of a mocked network test can be found [here](Examples/ExamplesTests/ExamplesTests.swift).
 
 ## Issues
 
