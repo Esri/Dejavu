@@ -69,7 +69,7 @@ Dejavu has 4 modes:
 
 - `playback` - Intercepts requests and gets the responses from the cache.
 
-### Example
+## Example
 
 A full example of mocked network test can be found [here](Examples/ExamplesTests/ExamplesTests.swift).
 
