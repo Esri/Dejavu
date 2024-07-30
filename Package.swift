@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // Copyright 2023 Esri
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
