@@ -5,7 +5,7 @@
     <br>
     <br>
     <img src="https://img.shields.io/badge/license-Apache-blue">
-    <img src="https://img.shields.io/badge/swift-5.7-orange">
+    <img src="https://img.shields.io/badge/swift-5.9-orange">
 </div>
 
 Use Dejavu to mock network requests in Swift tests making them faster and more reliable. First use Dejavu to record network activity. From then on Dejavu can playback the original network request, exactly as it ran the first time. Dejavu stores requests and responses in a sqlite database.
@@ -80,9 +80,8 @@ Dejavu has 4 modes:
 
 ## Requirements
 
-* Swift 5.7
-* iOS 15
-* Xcode 14.1
+* Swift 5.9 / Xcode 15.0 (or newer)
+* iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
 
 ## Issues
 
