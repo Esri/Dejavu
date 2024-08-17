@@ -41,7 +41,7 @@ func log(
     _ file: String = #file
 ) {
     let caller = file.components(separatedBy: "/").last!.components(separatedBy: ".").first!
-    let logger = Logger(subsystem: Bundle.dejavuIdentifier, category: caller)
+    let logger = Logger(subsystem: "com.esri.Dejavu", category: caller)
     
     let category = category.map { "[\($0)] - " } ?? ""
     
