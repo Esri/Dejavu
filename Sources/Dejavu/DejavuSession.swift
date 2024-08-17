@@ -18,13 +18,15 @@ public enum DejavuSessionNotifications {
     public static let didFailToFindRequestInCache = Notification.Name("DejavuSessionNotifications.didFailToFindRequestInCache")
 }
 
-public protocol DejavuSession {
+@preconcurrency
+public protocol DejavuSession: Sendable {
     var configuration: DejavuConfiguration { get }
     
+    @available(*, deprecated)
     func clearCache()
 }
 
-internal protocol SessionInternal: DejavuSession {
+protocol SessionInternal: DejavuSession {
     init(configuration: DejavuConfiguration)
     
     func register(request: Request) -> Int
@@ -32,7 +34,7 @@ internal protocol SessionInternal: DejavuSession {
     func unregister(request: Request) -> Int
     
     func record(request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: NSError?)
-    func fetch(request: Request, completion: @escaping (URLResponse?, Data?, Error?) -> Void )
+    func fetch(request: Request, completion: @escaping @Sendable (URLResponse?, Data?, Error?) -> Void )
     
     func end()
 }

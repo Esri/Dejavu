@@ -14,22 +14,26 @@
 
 import Foundation
 
+internal import Dispatch
+
 /// A type that allows observing the network.
-public protocol DejavuNetworkObserver {
+@preconcurrency
+public protocol DejavuNetworkObserver: Sendable {
     func startObserving(handler: DejavuNetworkObservationHandler)
     func stopObserving()
 }
 
 /// A type that handles network observation events.
-public protocol DejavuNetworkObservationHandler {
+@preconcurrency
+public protocol DejavuNetworkObservationHandler: Sendable {
     func requestWillBeSent(identifier: String, request: URLRequest)
     func responseReceived(identifier: String, response: URLResponse)
     func requestFinished(identifier: String, result: Result<Data, Error>)
 }
 
 /// An object that records network traffic.
-class NetworkRecorder {
-    private struct Transaction {
+final class NetworkRecorder: @unchecked Sendable {
+    private struct Transaction: Sendable {
         var request: URLRequest
         var dejavuRequest: Request
         var instanceCount: Int
@@ -40,7 +44,7 @@ class NetworkRecorder {
     
     private let serialQueue = DispatchQueue(label: "DejavuNetworkRecorder", qos: .utility)
     
-    private var transactions = [String: Transaction]()
+    private var transactions: [String: Transaction] = [:]
     
     private(set) var session: SessionInternal?
     private(set) var networkObserver: DejavuNetworkObserver?

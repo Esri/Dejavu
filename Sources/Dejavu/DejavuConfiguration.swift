@@ -14,16 +14,20 @@
 
 import Foundation
 
-/// A configuration specifies important Dejavu behavior. A configuration is needed to start a
-/// new session.
-public class DejavuConfiguration {
+internal import os
+
+/// A configuration specifies important Dejavu behavior. A configuration is
+/// needed to start a new session.
+public final class DejavuConfiguration: Sendable {
     /// A mode of operation for the Dejavu session.
-    public enum Mode {
+    public enum Mode: Sendable {
         /// Requests and responses go out over the network as normal.
         case disabled
-        /// First deletes the cache, then records any network traffic to the cache.
+        /// First deletes the cache, then records any network traffic to the
+        /// cache.
         case cleanRecord
-        /// Records any network traffic to the cache. Does not delete the database first.
+        /// Records any network traffic to the cache. Does not delete the
+        /// database first.
         case supplementalRecord
         /// Intercepts requests and gets the responses from the cache.
         case playback
@@ -39,30 +43,91 @@ public class DejavuConfiguration {
     public let networkInterceptor: DejavuNetworkInterceptor
     
     /// Replacements for query parameters.
-    public var queryParameterReplacements: [String: Any] = [String: Any]()
+    @preconcurrency public var queryParameterReplacements: [String: any Sendable] {
+        get { state.withLock(\.queryParameterReplacements) }
+        set { state.withLock { $0.queryParameterReplacements = newValue } }
+    }
     /// Query parameters to be removed.
-    public var queryParametersToRemove: [String] = [String]()
+    public var queryParametersToRemove: [String] {
+        get { state.withLock(\.queryParametersToRemove) }
+        set { state.withLock { $0.queryParametersToRemove = newValue } }
+    }
     /// Replacements for JSON key/value pairs.
-    public var jsonResponseKeyValueReplacements: [String: Any] = [String: Any]()
+    @preconcurrency public var jsonResponseKeyValueReplacements: [String: any Sendable] {
+        get { state.withLock(\.jsonResponseKeyValueReplacements) }
+        set { state.withLock { $0.jsonResponseKeyValueReplacements = newValue } }
+    }
     /// JSON keys to be removed.
-    public var jsonResponseKeyValuesToRemove: [String] = [String]()
+    public var jsonResponseKeyValuesToRemove: [String] {
+        get { state.withLock(\.jsonResponseKeyValuesToRemove) }
+        set { state.withLock { $0.jsonResponseKeyValuesToRemove = newValue } }
+    }
     /// Replacements for header entries.
-    public var headerReplacements: [String: Any] = [String: Any]()
+    @preconcurrency public var headerReplacements: [String: any Sendable] {
+        get { state.withLock(\.headerReplacements) }
+        set { state.withLock { $0.headerReplacements = newValue } }
+    }
     /// Header entries to be removed.
-    public var headersToRemove: [String] = [String]()
-    /// A Boolean value indicating whether multipart request bodies should be ignored.
-    public var ignoreMultipartRequestBody = true
+    public var headersToRemove: [String] {
+        get { state.withLock(\.headersToRemove) }
+        set { state.withLock { $0.headersToRemove = newValue } }
+    }
+    /// A Boolean value indicating whether multipart request bodies should be
+    /// ignored.
+    public var ignoreMultipartRequestBody: Bool {
+        get { state.withLock(\.ignoreMultipartRequestBody) }
+        set { state.withLock { $0.ignoreMultipartRequestBody = newValue } }
+    }
     
     /// Useful for situations where requests are made multiple times.
     ///
-    /// Use this judiciously when
-    /// problems arise with certain static tests where responses wouldn't change.
-    public var urlsToIgnoreInstanceCount = [URL]()
+    /// Use this judiciously when problems arise with certain static tests where
+    /// responses wouldn't change.
+    public var urlsToIgnoreInstanceCount: [URL] {
+        get { state.withLock(\.urlsToIgnoreInstanceCount) }
+        set { state.withLock { $0.urlsToIgnoreInstanceCount = newValue } }
+    }
     
     /// Authentication token parameter keys.
-    public var authenticationTokenParameterKeys = [String]()
+    public var authenticationTokenParameterKeys: [String] {
+        get { state.withLock(\.authenticationTokenParameterKeys) }
+        set { state.withLock { $0.authenticationTokenParameterKeys = newValue } }
+    }
     /// Authentication header parameter keys.
-    public var authenticationHeaderParameterKeys = [String]()
+    public var authenticationHeaderParameterKeys: [String] {
+        get { state.withLock(\.authenticationHeaderParameterKeys) }
+        set { state.withLock { $0.authenticationHeaderParameterKeys = newValue } }
+    }
+    
+    private struct State: Sendable {
+        /// Replacements for query parameters.
+        var queryParameterReplacements: [String: any Sendable] = [:]
+        /// Query parameters to be removed.
+        var queryParametersToRemove: [String] = []
+        /// Replacements for JSON key/value pairs.
+        var jsonResponseKeyValueReplacements: [String: any Sendable] = [:]
+        /// JSON keys to be removed.
+        var jsonResponseKeyValuesToRemove: [String] = []
+        /// Replacements for header entries.
+        var headerReplacements: [String: any Sendable] = [:]
+        /// Header entries to be removed.
+        var headersToRemove: [String] = []
+        /// A Boolean value indicating whether multipart request bodies should be ignored.
+        var ignoreMultipartRequestBody = true
+        
+        /// Useful for situations where requests are made multiple times.
+        ///
+        /// Use this judiciously when
+        /// problems arise with certain static tests where responses wouldn't change.
+        var urlsToIgnoreInstanceCount: [URL] = []
+        
+        /// Authentication token parameter keys.
+        var authenticationTokenParameterKeys: [String] = []
+        /// Authentication header parameter keys.
+        var authenticationHeaderParameterKeys: [String] = []
+    }
+    
+    private let state = OSAllocatedUnfairLock(initialState: State())
     
     /// Creates a new Dejavu configuration.
     /// - Parameters:
@@ -95,31 +160,31 @@ public class DejavuConfiguration {
         self.networkInterceptor = networkInterceptor
     }
     
-    internal enum NormalizationMode {
+    enum NormalizationMode {
         case request
         case response
         case headers
         case removeTokenParameters
     }
     
-    internal func normalize(jsonObject: Any, mode: NormalizationMode) -> Any {
-        if let jsonArray = jsonObject as? [Any] {
-            return normalize(jsonArray: jsonArray, mode: mode)
+    func normalize(jsonObject: Any, mode: NormalizationMode) -> Any {
+        return if let jsonArray = jsonObject as? [Any] {
+            normalize(jsonArray: jsonArray, mode: mode)
         } else if let json = jsonObject as? [String: Any] {
-            return normalize(jsonDictionary: json, mode: mode)
+            normalize(jsonDictionary: json, mode: mode)
+        } else {
+            jsonObject
         }
-        return jsonObject
     }
     
-    internal func normalize(jsonArray: [Any], mode: NormalizationMode) -> [Any] {
+    func normalize(jsonArray: [Any], mode: NormalizationMode) -> [Any] {
         return jsonArray.map {
             normalize(jsonObject: $0, mode: mode)
         }
     }
     
     /// Recursively normalizes the json
-    internal func normalize(jsonDictionary: [String: Any], mode: NormalizationMode) -> [String: Any] {
-        
+    func normalize(jsonDictionary: [String: Any], mode: NormalizationMode) -> [String: Any] {
         let toRemove: [String]
         let toReplace: [String: Any]
         
@@ -156,7 +221,7 @@ public class DejavuConfiguration {
         return Dictionary(uniqueKeysWithValues: replaced)
     }
     
-    internal func normalizeJsonData(data: Data?, mode: NormalizationMode) -> Data? {
+    func normalizeJsonData(data: Data?, mode: NormalizationMode) -> Data? {
         guard let data = data else {
             return nil
         }
@@ -174,7 +239,7 @@ public class DejavuConfiguration {
         return nil
     }
     
-    internal func normalizeRequestBody(data: Data?, mode: NormalizationMode) -> Data? {
+    func normalizeRequestBody(data: Data?, mode: NormalizationMode) -> Data? {
         guard let data = data else {
             return nil
         }
@@ -216,7 +281,7 @@ public class DejavuConfiguration {
         return data
     }
     
-    internal func normalize(url: URL, mode: NormalizationMode) -> URL {
+    func normalize(url: URL, mode: NormalizationMode) -> URL {
         if var comps = URLComponents(url: url, resolvingAgainstBaseURL: false), let queryItems = comps.queryItems {
             comps.queryItems = normalize(queryItems: queryItems, mode: mode)
             return comps.url!
@@ -224,7 +289,7 @@ public class DejavuConfiguration {
         return url
     }
     
-    internal func queryContainsAuthenticationParameters(url: URL) -> Bool {
+    func queryContainsAuthenticationParameters(url: URL) -> Bool {
         if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false), let queryItems = comps.queryItems {
             for qi in queryItems {
                 if authenticationTokenParameterKeys.contains(qi.name) {

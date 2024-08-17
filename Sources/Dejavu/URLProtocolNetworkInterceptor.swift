@@ -14,40 +14,57 @@
 
 import Foundation
 
+internal import os
+
 /// A network interceptor that uses URLProtocol registration for network interception.
-public class URLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
+public final class URLProtocolNetworkInterceptor: Sendable {
     public static let shared = URLProtocolNetworkInterceptor()
     public static let protocolClass: URLProtocol.Type = InterceptorURLProtocol.self
     
     private init() {}
     
-    private(set) var handler: DejavuNetworkInterceptionHandler?
+    private struct State: Sendable {
+        var handler: DejavuNetworkInterceptionHandler?
+        var urlProtocolRegistrationHandler: (@Sendable (AnyClass) -> Void)?
+        var urlProtocolUnregistrationHandler: (@Sendable (AnyClass) -> Void)?
+    }
     
+    private let state = OSAllocatedUnfairLock(initialState: State())
+    
+    var handler: DejavuNetworkInterceptionHandler? { state.withLock(\.handler) }
+    
+    func setURLProtocolRegistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        state.withLock { $0.urlProtocolRegistrationHandler = handler }
+    }
+    
+    func setURLProtocolUnregistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        state.withLock { $0.urlProtocolUnregistrationHandler = handler }
+    }
+}
+
+extension URLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
     public func startIntercepting(handler: DejavuNetworkInterceptionHandler) {
-        self.handler = handler
-        registerURLProtocolClass(InterceptorURLProtocol.self)
+        let urlProtocolRegistrationHandler = state.withLock { state in
+            state.handler = handler
+            return state.urlProtocolRegistrationHandler
+        }
+        let `class` = InterceptorURLProtocol.self
+        URLProtocol.registerClass(`class`)
+        urlProtocolRegistrationHandler?(`class`)
     }
     
     public func stopIntercepting() {
-        handler = nil
-        unregisterURLProtocolClass(InterceptorURLProtocol.self)
+        let urlProtocolUnregistrationHandler = state.withLock { state in
+            state.handler = nil
+            return state.urlProtocolUnregistrationHandler
+        }
+        let `class` = InterceptorURLProtocol.self
+        URLProtocol.unregisterClass(`class`)
+        urlProtocolUnregistrationHandler?(`class`)
     }
-    
-    private func registerURLProtocolClass(_ cls: AnyClass) {
-        URLProtocol.registerClass(cls)
-        urlProtocolRegistrationHandler?(cls)
-    }
-    
-    private func unregisterURLProtocolClass(_ cls: AnyClass) {
-        URLProtocol.unregisterClass(cls)
-        urlProtocolUnregistrationHandler?(cls)
-    }
-    
-    var urlProtocolRegistrationHandler: ((AnyClass) -> Void)?
-    var urlProtocolUnregistrationHandler: ((AnyClass) -> Void)?
 }
 
-class InterceptorURLProtocol: URLProtocol {
+final class InterceptorURLProtocol: URLProtocol, @unchecked Sendable {
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkInterceptor.shared.handler != nil
         if !hasHandler {
@@ -67,13 +84,13 @@ class InterceptorURLProtocol: URLProtocol {
         }
         
         handler.interceptRequest(request: request) { [weak self] result in
-            guard let self = self,
-                  let client = self.client else {
+            guard let self,
+                  let client else {
                 return
             }
             switch result {
             case .success(let (data, response)):
-                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: URLCache.StoragePolicy.notAllowed)
+                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
                 client.urlProtocol(self, didLoad: data)
                 client.urlProtocolDidFinishLoading(self)
             case .failure(let error):

@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import Foundation
-import OSLog
+
+internal import os
 
 enum LoggingCategory: String {
     /// Matching requests in the database.

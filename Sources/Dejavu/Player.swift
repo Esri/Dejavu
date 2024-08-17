@@ -14,25 +14,29 @@
 
 import Foundation
 
+internal import Dispatch
+
 /// A type that is able to intercept network requests and send back a programmed response.
-public protocol DejavuNetworkInterceptor {
+@preconcurrency
+public protocol DejavuNetworkInterceptor: Sendable {
     func startIntercepting(handler: DejavuNetworkInterceptionHandler)
     func stopIntercepting()
 }
 
 /// A type that can act as a delegate to a network interceptor.
-public protocol DejavuNetworkInterceptionHandler {
-    func interceptRequest(request: URLRequest, completion: @escaping (Result<(data: Data, response: URLResponse), Error>) -> Void)
+@preconcurrency
+public protocol DejavuNetworkInterceptionHandler: Sendable {
+    func interceptRequest(request: URLRequest, completion: @escaping @Sendable (Result<(data: Data, response: URLResponse), Error>) -> Void)
 }
 
 /// A class that plays back responses for requests in the Dejavu environment.
-class Player: DejavuNetworkInterceptionHandler {
+final class Player: @unchecked Sendable {
     static let shared = Player()
     
     private init() {}
     
-    private(set) var session: SessionInternal?
-    private(set) var networkInterceptor: DejavuNetworkInterceptor?
+    private var session: SessionInternal?
+    private var networkInterceptor: DejavuNetworkInterceptor?
     
     private let serialQueue = DispatchQueue(label: "DejavuPlayer", qos: .utility)
     
@@ -50,10 +54,12 @@ class Player: DejavuNetworkInterceptionHandler {
             self.networkInterceptor?.stopIntercepting()
         }
     }
-    
+}
+
+extension Player: DejavuNetworkInterceptionHandler {
     func interceptRequest(
         request: URLRequest,
-        completion: @escaping (Result<(data: Data, response: URLResponse), Error>) -> Void
+        completion: @escaping @Sendable (Result<(data: Data, response: URLResponse), Error>) -> Void
     ) {
         serialQueue.async {
             guard let session = Dejavu.currentSession as? SessionInternal else {
