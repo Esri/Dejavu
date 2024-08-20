@@ -13,20 +13,19 @@
 // limitations under the License.
 
 import Foundation
-import GRDB
 
-class GRDBSession: SessionInternal {
-    static var serialQueue = DispatchQueue(
+internal import Dispatch
+internal import GRDB
+internal import os
+
+final class GRDBSession: SessionInternal, @unchecked Sendable {
+    private static let serialQueue = DispatchQueue(
         label: "DejavuGRDBSession.serialQueue",
-        qos: DispatchQoS.utility,
-        attributes: [],
-        autoreleaseFrequency: DispatchQueue.AutoreleaseFrequency.inherit,
-        target: nil
+        qos: .utility
     )
     
     let configuration: DejavuConfiguration
-    
-    private var instanceCounts = [String: Int]()
+    let instanceCounts = OSAllocatedUnfairLock<[String: Int]>(initialState: [:])
     
     private var dbQueue: DatabaseQueue?
     
@@ -79,8 +78,7 @@ class GRDBSession: SessionInternal {
         // if db parent directory does not exist, then create it
         try? FileManager.default.createDirectory(
             at: configuration.fileURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true,
-            attributes: nil
+            withIntermediateDirectories: true
         )
         
         // create database
@@ -120,21 +118,24 @@ class GRDBSession: SessionInternal {
     }
     
     func register(request: Request) -> Int {
-        // increment request count
-        var instanceCount = self.instanceCounts[request.hashString] ?? 0
-        instanceCount += 1
-        self.instanceCounts[request.hashString] = instanceCount
-        return instanceCount
+        return instanceCounts.withLock { instanceCounts in
+            var instanceCount = instanceCounts[request.hashString, default: 0]
+            instanceCount += 1
+            instanceCounts[request.hashString] = instanceCount
+            return instanceCount
+        }
     }
     
     @discardableResult
     func unregister(request: Request) -> Int {
-        guard var instanceCount = self.instanceCounts[request.hashString] else {
-            return 0
+        return instanceCounts.withLock { instanceCounts in
+            guard var instanceCount = instanceCounts[request.hashString] else {
+                return 0
+            }
+            instanceCount -= 1
+            instanceCounts[request.hashString] = instanceCount
+            return instanceCount
         }
-        instanceCount -= 1
-        self.instanceCounts[request.hashString] = instanceCount
-        return instanceCount
     }
     
     func record(request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: NSError?) {
@@ -183,7 +184,7 @@ class GRDBSession: SessionInternal {
     
     // swiftlint:disable cyclomatic_complexity
     
-    func fetch(request: Request, completion: @escaping (URLResponse?, Data?, Error?) -> Void ) {
+    func fetch(request: Request, completion: @escaping @Sendable (URLResponse?, Data?, Error?) -> Void ) {
         log("requesting: \(request.url)", category: .requesting, type: .info)
         
         GRDBSession.serialQueue.async {

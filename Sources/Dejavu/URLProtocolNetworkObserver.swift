@@ -14,39 +14,56 @@
 
 import Foundation
 
-public class URLProtocolNetworkObserver: DejavuNetworkObserver {
+internal import os
+
+public final class URLProtocolNetworkObserver: Sendable {
     public static let shared = URLProtocolNetworkObserver()
     public static let protocolClass: URLProtocol.Type = ObserverProtocol.self
     
     private init() {}
     
-    private(set) var handler: DejavuNetworkObservationHandler?
+    private struct State: Sendable {
+        var handler: DejavuNetworkObservationHandler?
+        var urlProtocolRegistrationHandler: (@Sendable (AnyClass) -> Void)?
+        var urlProtocolUnregistrationHandler: (@Sendable (AnyClass) -> Void)?
+    }
     
+    private let state = OSAllocatedUnfairLock(initialState: State())
+    
+    var handler: DejavuNetworkObservationHandler? { state.withLock(\.handler) }
+    
+    func setURLProtocolRegistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        state.withLock { $0.urlProtocolRegistrationHandler = handler }
+    }
+    
+    func setURLProtocolUnregistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        state.withLock { $0.urlProtocolUnregistrationHandler = handler }
+    }
+}
+
+extension URLProtocolNetworkObserver: DejavuNetworkObserver {
     public func startObserving(handler: DejavuNetworkObservationHandler) {
-        self.handler = handler
-        registerURLProtocolClass(ObserverProtocol.self)
+        let urlProtocolRegistrationHandler = state.withLock { state in
+            state.handler = handler
+            return state.urlProtocolRegistrationHandler
+        }
+        let `class` = ObserverProtocol.self
+        URLProtocol.registerClass(`class`)
+        urlProtocolRegistrationHandler?(`class`)
     }
     
     public func stopObserving() {
-        handler = nil
-        unregisterURLProtocolClass(ObserverProtocol.self)
+        let urlProtocolUnregistrationHandler = state.withLock { state in
+            state.handler = nil
+            return state.urlProtocolUnregistrationHandler
+        }
+        let `class` = ObserverProtocol.self
+        URLProtocol.registerClass(`class`)
+        urlProtocolUnregistrationHandler?(`class`)
     }
-    
-    private func registerURLProtocolClass(_ cls: AnyClass) {
-        URLProtocol.registerClass(cls)
-        urlProtocolRegistrationHandler?(cls)
-    }
-    
-    private func unregisterURLProtocolClass(_ cls: AnyClass) {
-        URLProtocol.unregisterClass(cls)
-        urlProtocolUnregistrationHandler?(cls)
-    }
-    
-    var urlProtocolRegistrationHandler: ((AnyClass) -> Void)?
-    var urlProtocolUnregistrationHandler: ((AnyClass) -> Void)?
 }
 
-class ObserverProtocol: URLProtocol {
+final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     static let session = URLSession(configuration: .ephemeral)
     
     override class func canInit(with request: URLRequest) -> Bool {
@@ -67,16 +84,18 @@ class ObserverProtocol: URLProtocol {
             return
         }
         
-        guard let client = self.client else { return }
-        
-        Task.detached { [self] in
+        Task.detached { [weak self] in
+            guard let self,
+                  let client else {
+                return
+            }
             let identifier = UUID().uuidString
             handler.requestWillBeSent(identifier: identifier, request: request)
             
             do {
                 let (data, response) = try await Self.session.data(for: request)
                 handler.responseReceived(identifier: identifier, response: response)
-                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: URLCache.StoragePolicy.notAllowed)
+                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
                 client.urlProtocol(self, didLoad: data)
                 client.urlProtocolDidFinishLoading(self)
                 handler.requestFinished(identifier: identifier, result: .success(data))

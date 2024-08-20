@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation.NSURLProtocol
+internal import os
 
 public enum Dejavu {
     /// The current session.
-    public private(set) static var currentSession: DejavuSession?
+    public static var currentSession: DejavuSession? {
+        _currentSession.withLock { $0 }
+    }
+    
+    private static let _currentSession = OSAllocatedUnfairLock<GRDBSession?>(initialState: nil)
     
     @discardableResult
     /// Starts a new Dejavu session.
@@ -28,7 +32,7 @@ public enum Dejavu {
         
         // create new session
         let session = GRDBSession(configuration: configuration)
-        currentSession = session
+        _currentSession.withLock { $0 = session }
         
         // enable playing back or recording
         switch configuration.mode {
@@ -46,25 +50,31 @@ public enum Dejavu {
     }
     
     /// Sets url protocol registration handler for the network observer and interceptor.
-    public static func setURLProtocolRegistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
-        URLProtocolNetworkObserver.shared.urlProtocolRegistrationHandler = handler
-        URLProtocolNetworkInterceptor.shared.urlProtocolRegistrationHandler = handler
+    @preconcurrency
+    public static func setURLProtocolRegistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        URLProtocolNetworkObserver.shared.setURLProtocolRegistrationHandler(handler)
+        URLProtocolNetworkInterceptor.shared.setURLProtocolRegistrationHandler(handler)
     }
     
     /// Sets url protocol unregistration handler for the network observer and interceptor.
-    public static func setURLProtocolUnregistrationHandler(_ handler: @escaping (AnyClass) -> Void) {
-        URLProtocolNetworkObserver.shared.urlProtocolUnregistrationHandler = handler
-        URLProtocolNetworkInterceptor.shared.urlProtocolUnregistrationHandler = handler
+    @preconcurrency
+    public static func setURLProtocolUnregistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
+        URLProtocolNetworkObserver.shared.setURLProtocolUnregistrationHandler(handler)
+        URLProtocolNetworkInterceptor.shared.setURLProtocolUnregistrationHandler(handler)
     }
     
     /// Ends the current Dejavu session.
     public static func endSession() {
-        guard let session = currentSession else {
-            return
+        // First cut the ties to the current session
+        let session: GRDBSession? = _currentSession.withLock { currentSession in
+            let session = currentSession
+            if currentSession != nil {
+                currentSession = nil
+            }
+            return session
         }
         
-        // First cut the ties to the current session
-        currentSession = nil
+        guard let session else { return }
             
         // disable playback or recording
         switch session.configuration.mode {
@@ -77,7 +87,7 @@ public enum Dejavu {
         }
         
         // call end on session
-        (session as? SessionInternal)?.end()
+        session.end()
         
         log("Dejavu session ended", category: .endSession, type: .info)
     }

@@ -18,8 +18,8 @@ import PackageDescription
 let package = Package(
     name: "Dejavu",
     platforms: [
-        .iOS(.v15),
-        .macCatalyst(.v15)
+        .iOS(.v16),
+        .macCatalyst(.v16)
     ],
     products: [
         .library(
@@ -38,6 +38,10 @@ let package = Package(
             name: "Dejavu",
             dependencies: [
                 .product(name: "GRDB", package: "GRDB.swift")
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport"),
+                .enableExperimentalFeature("StrictConcurrency")
             ]
         )
     ]

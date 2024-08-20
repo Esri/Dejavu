@@ -21,7 +21,7 @@
 ///  - normalized values
 ///  - httpBody (stores it)
 ///  - etc...
-internal class Request {
+struct Request {
     let urlRequest: URLRequest
     let originalUrl: URL
     let url: URL
@@ -34,20 +34,7 @@ internal class Request {
     let headersContainAuthentication: Bool
     let queryContainsAuthentication: Bool
     let bodyContainsAuthentication: Bool
-    
-    lazy var hashString: String = {
-        // create a grand string representing our request, then sha256 hash it all
-        
-        var s = "url=" + urlNoQuery.absoluteString
-        var q = "query=" + (query ?? "")
-        var b = "body=" + (body?.hashSHA256String() ?? "")
-        var hca = "headersContainAuthentication=" + (headersContainAuthentication ? "true" : "false")
-        var m = "method=" + (method ?? "")
-        
-        var combined = [s, q, b, hca, m].joined(separator: ",")
-        
-        return combined.hashSHA256()
-    }()
+    let hashString: String
     
     init(request: URLRequest, configuration: DejavuConfiguration) throws {
         guard let originalUrl = request.url else {
@@ -74,20 +61,33 @@ internal class Request {
         // Easiest way to see if there is authentication parameters in the body
         // is to run the process to remove the token parameters,
         // then compare it to the original body size
-        if let orig = self.body, let removed = configuration.normalizeRequestBody(data: orig, mode: .removeTokenParameters) {
-            bodyContainsAuthentication = orig.count > removed.count
+        bodyContainsAuthentication = if let orig = self.body, let removed = configuration.normalizeRequestBody(data: orig, mode: .removeTokenParameters) {
+            orig.count > removed.count
         } else {
-            bodyContainsAuthentication = false
+            false
         }
         
         if let reqHeaders = request.allHTTPHeaderFields,
             let normalizedHeaders = configuration.normalize(jsonObject: reqHeaders, mode: .headers) as? [String: Any] {
             self.headers = try? normalizedHeaders.toJSONData()
-            headersContainAuthentication = reqHeaders.contains { configuration.authenticationHeaderParameterKeys.contains($0.key)
+            headersContainAuthentication = reqHeaders.contains { 
+                configuration.authenticationHeaderParameterKeys.contains($0.key)
             }
         } else {
             self.headers = nil
             headersContainAuthentication = false
         }
+        
+        // Create a grand string representing our request, then sha256 hash it
+        // all.
+        
+        let s = "url=" + urlNoQuery.absoluteString
+        let q = "query=" + (query ?? "")
+        let b = "body=" + (body?.hashSHA256String() ?? "")
+        let hca = "headersContainAuthentication=" + (headersContainAuthentication ? "true" : "false")
+        let m = "method=" + (method ?? "")
+        hashString = [s, q, b, hca, m]
+            .joined(separator: ",")
+            .hashSHA256()
     }
 }
