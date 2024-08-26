@@ -14,78 +14,87 @@
 
 import Foundation
 
-internal import Dispatch
 internal import GRDB
 internal import os
 
-final class GRDBSession: SessionInternal, @unchecked Sendable {
-    private static let serialQueue = DispatchQueue(
-        label: "DejavuGRDBSession.serialQueue",
-        qos: .utility
-    )
+final class GRDBSession: DejavuSession, @unchecked Sendable {
+    let configuration: DejavuSessionConfiguration
     
-    let configuration: DejavuConfiguration
-    let instanceCounts = OSAllocatedUnfairLock<[String: Int]>(initialState: [:])
+    private struct State {
+        var instanceCounts: [String: Int] = [:]
+        var transactions: [String: Transaction] = [:]
+        
+        mutating func register(_ request: Request) -> Int {
+            var instanceCount = instanceCounts[request.hashString, default: 0]
+            instanceCount += 1
+            instanceCounts[request.hashString] = instanceCount
+            return instanceCount
+        }
+        
+        @discardableResult
+        mutating func unregister(_ request: Request) -> Int {
+            guard var instanceCount = instanceCounts[request.hashString] else {
+                return 0
+            }
+            instanceCount -= 1
+            instanceCounts[request.hashString] = instanceCount
+            return instanceCount
+        }
+    }
     
-    private var dbQueue: DatabaseQueue?
+    private let state = OSAllocatedUnfairLock(initialState: State())
     
-    required init(configuration: DejavuConfiguration) {
+    let dbQueue: DatabaseQueue
+    
+    required init(configuration: DejavuSessionConfiguration) throws {
         log("Initializing Dejavu GRDB session: \(configuration.fileURL)", category: .beginSession, type: .info)
         
-        self.configuration = configuration
+        lazy var temporaryURL = URL.temporaryDirectory
+            .appending(component: ProcessInfo().globallyUniqueString)
         
-        GRDBSession.serialQueue.async {
-            if configuration.mode == .playback {
-                if FileManager.default.fileExists(atPath: configuration.fileURL.path) {
-                    // Only try to open if the file exists. In playback mode, don't create a
-                    // database if there isn't one.
-                    self.dbQueue = try? DatabaseQueue(path: configuration.fileURL.path)
-                }
+        switch configuration.mode {
+        case .cleanRecord:
+            dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
+        case .supplementalRecord:
+            if FileManager.default.fileExists(at: configuration.fileURL) {
+                try FileManager.default.copyItem(
+                    at: configuration.fileURL,
+                    to: temporaryURL
+                )
+                dbQueue = try DatabaseQueue(fileURL: temporaryURL)
+            } else {
+                dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
+            }
+        case .playback:
+            if FileManager.default.fileExists(at: configuration.fileURL) {
+                // Only try to open if the file exists. In playback mode, don't
+                // create a database if there isn't one.
+                dbQueue = try DatabaseQueue(fileURL: configuration.fileURL)
+            } else {
+                dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
             }
         }
+        
+        self.configuration = configuration
     }
     
     func clearCache() {
-        GRDBSession.serialQueue.sync {
-            // if db file exists, then delete it
-            if FileManager.default.fileExists(atPath: configuration.fileURL.path) {
-                try? FileManager.default.removeItem(at: configuration.fileURL)
-            }
-        }
+        // If db file exists, then delete it.
+        try? FileManager.default.removeItem(at: configuration.fileURL)
     }
     
-    private func setupDBForRecording() {
-        guard dbQueue == nil else { return }
-        if configuration.mode == .cleanRecord {
-            // if db file exists, then delete it
-            if FileManager.default.fileExists(atPath: configuration.fileURL.path) {
-                try? FileManager.default.removeItem(at: configuration.fileURL)
-            }
-            
-            createDatabaseAndSchema()
-        } else if configuration.mode == .supplementalRecord {
-            if !FileManager.default.fileExists(atPath: configuration.fileURL.path) {
-                // if database doesn't exist, create it
-                createDatabaseAndSchema()
-            } else {
-                // otherwise open it
-                dbQueue = try? DatabaseQueue(path: configuration.fileURL.path)
-            }
-        }
-    }
-    
-    private func createDatabaseAndSchema() {
+    private static func makeDatabaseAndSchema(fileURL: URL) throws -> DatabaseQueue {
         // if db parent directory does not exist, then create it
         try? FileManager.default.createDirectory(
-            at: configuration.fileURL.deletingLastPathComponent(),
+            at: fileURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         
-        // create database
-        dbQueue = try? DatabaseQueue(path: configuration.fileURL.path)
+        // Create database.
+        let dbQueue = try DatabaseQueue(fileURL: fileURL)
         
-        // create requests table
-        try? dbQueue?.inDatabase { db in
+        // Create requests table.
+        try dbQueue.inDatabase { db in
             try db.create(table: "requests") { t in
                 t.column("id", .integer).primaryKey()
                 t.column("url", .text).notNull()
@@ -102,8 +111,8 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
             }
         }
         
-        // create response table
-        try? dbQueue?.inDatabase { db in
+        // Create response table.
+        try dbQueue.inDatabase { db in
             try db.create(table: "responses") { t in
                 t.column("id", .integer).primaryKey()
                 t.column("requestID", .integer).references("requests", column: "id", onDelete: .cascade, onUpdate: nil, deferred: false)
@@ -115,267 +124,61 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
                 t.column("failureErrorDescription", .text)
             }
         }
+        
+        return dbQueue
     }
     
-    func register(request: Request) -> Int {
-        return instanceCounts.withLock { instanceCounts in
-            var instanceCount = instanceCounts[request.hashString, default: 0]
-            instanceCount += 1
-            instanceCounts[request.hashString] = instanceCount
-            return instanceCount
-        }
+    func register(_ request: Request) -> Int {
+        return state.withLock { $0.register(request) }
     }
     
     @discardableResult
-    func unregister(request: Request) -> Int {
-        return instanceCounts.withLock { instanceCounts in
-            guard var instanceCount = instanceCounts[request.hashString] else {
-                return 0
-            }
-            instanceCount -= 1
-            instanceCounts[request.hashString] = instanceCount
-            return instanceCount
-        }
+    func unregister(_ request: Request) -> Int {
+        return state.withLock { $0.unregister(request) }
     }
     
-    func record(request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: NSError?) {
-        GRDBSession.serialQueue.async {
-            self.setupDBForRecording()
-            self.dbQueue?.inDatabase { db in
-                do {
-                    // if request already exists
-                    if let requestRecord = try? self.findRequest(database: db, request: request, instanceCount: instanceCount) {
-                        guard let requestID = requestRecord.id else {
-                            throw DejavuError.internalError("primary key column is null and it should not be")
-                        }
-                        
-                        // if response already exists, update it
-                        if let responseRecord = try? self.findResponse(database: db, requestRecord: requestRecord) {
-                            responseRecord.updateResponse(response: response, data: data, error: error)
-                            try responseRecord.update(db)
-                        } else {
-                            // no response in database for an existing request, this shouldn't happen
-                            let responseRecord = ResponseRecord(response: response, requestID: requestID, data: data, error: error)
-                            try responseRecord.insert(db)
-                        }
+    func record(_ request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: Error?) {
+        dbQueue.asyncWriteWithoutTransaction { db in
+            do {
+                // if request already exists
+                if let requestRecord = try? db.record(for: request, instanceCount: instanceCount) {
+                    guard let requestID = requestRecord.id else {
+                        throw DejavuError.internalError("primary key column is null and it should not be")
+                    }
+                    
+                    // if response already exists, update it
+                    if let responseRecord = try? db.response(for: requestRecord) {
+                        responseRecord.updateResponse(response: response, data: data, error: error as NSError?)
+                        try responseRecord.update(db)
                     } else {
-                        if self.configuration.mode == .supplementalRecord {
-                            // output to console - this can be helpful for trying to get
-                            // supplemental recording to help tests pass consistently
-                            log("Supplemental recording - recorded new request!", category: .recording)
-                        }
-                        
-                        let requestRecord = RequestRecord(request: request, instance: Int64(instanceCount))
-                        try requestRecord.insert(db)
-                        
-                        guard let requestID = requestRecord.id else {
-                            throw DejavuError.internalError("primary key column is null and it should not be")
-                        }
-                        
-                        let responseRecord = ResponseRecord(response: response, requestID: requestID, data: data, error: error)
+                        // no response in database for an existing request, this shouldn't happen
+                        let responseRecord = ResponseRecord(response: response, requestID: requestID, data: data, error: error as NSError?)
                         try responseRecord.insert(db)
                     }
-                } catch let error as NSError {
-                    log("error inserting record: \(error)", type: .error)
+                } else {
+                    if self.configuration.mode == .supplementalRecord {
+                        // output to console - this can be helpful for trying to get
+                        // supplemental recording to help tests pass consistently
+                        log("Supplemental recording - recorded new request!", category: .recording)
+                    }
+                    
+                    let requestRecord = RequestRecord(request: request, instance: Int64(instanceCount))
+                    try requestRecord.insert(db)
+                    
+                    guard let requestID = requestRecord.id else {
+                        throw DejavuError.internalError("primary key column is null and it should not be")
+                    }
+                    
+                    let responseRecord = ResponseRecord(response: response, requestID: requestID, data: data, error: error as NSError?)
+                    try responseRecord.insert(db)
                 }
+            } catch {
+                log("error inserting record: \(error)", type: .error)
             }
         }
     }
     
-    // swiftlint:disable cyclomatic_complexity
-    
-    func fetch(request: Request, completion: @escaping @Sendable (URLResponse?, Data?, Error?) -> Void ) {
-        log("requesting: \(request.url)", category: .requesting, type: .info)
-        
-        GRDBSession.serialQueue.async {
-            guard let dbQueue = self.dbQueue else {
-                completion(nil, nil, DejavuError.cacheDoesNotExist(fileURL: self.configuration.fileURL))
-                return
-            }
-            
-            let instanceCount = self.register(request: request)
-            
-            dbQueue.inDatabase { db in
-                do {
-                    var foundRecord = try self.findRequest(database: db, request: request, instanceCount: instanceCount, requireMatchedInstance: true)
-                    
-                    if foundRecord == nil {
-                        // if can't find, then search for same authenticated request, but look for
-                        // one in the cache that is authenticated in a different way
-                        foundRecord = try self.findOtherAuthenticatedRequest(database: db, request: request, instanceCount: instanceCount)
-                        if foundRecord != nil {
-                            log("could only find version of this request that was authenticated as well, but in a different way: \(request.originalUrl)", category: .matchingRequests, type: .error)
-                        }
-                    }
-                    
-                    if foundRecord == nil {
-                        // if still can't find, then search for un-authenticated version of the request
-                        foundRecord = try self.findUnauthenticatedRequest(database: db, request: request, instanceCount: instanceCount)
-                        if foundRecord != nil {
-                            log("could only find unauthenticated version of this request: \(request.originalUrl)", category: .matchingRequests, type: .error)
-                        }
-                    }
-                    
-                    if foundRecord == nil {
-                        // if still can't find, then check to see if it is a URL where the instanceCount can be ignored
-                        if self.configuration.urlsToIgnoreInstanceCount.contains(request.url) {
-                            foundRecord = try self.findRequest(database: db, request: request, instanceCount: instanceCount, requireMatchedInstance: false)
-                            log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
-                        }
-                    }
-                    
-                    guard let requestRecord = foundRecord else {
-                        // see if the same request (already authenticated) exists
-                        if let challenge = try self.findAuthenticatedRequest(database: db, request: request, instanceCount: instanceCount) {
-                            log("returning auth error for request: \(request.originalUrl)", category: .matchingRequests)
-                            completion(challenge.response, challenge.data, challenge.error)
-                            return
-                        }
-                        
-                        log("cannot find request in cache: \(request.originalUrl), instanceCount: \(instanceCount), hash: \(request.hashString), hca: \(request.headersContainAuthentication), qca: \(request.queryContainsAuthentication), bca: \(request.bodyContainsAuthentication), method: \(request.method ?? "null")", category: .matchingRequests, type: .error)
-                        log("  - query \(request.originalUrl.query?.removingPercentEncoding ?? "") ", category: .matchingRequests)
-                        var info: [AnyHashable: Any] = ["URL": request.url]
-                        if let query = request.query {
-                            info["query"] = query
-                        }
-                        if let body = request.body, let bodyString = String(data: body, encoding: .utf8) {
-                            info["body"] = bodyString
-                        }
-                        NotificationCenter.default.post(name: DejavuSessionNotifications.didFailToFindRequestInCache, object: self, userInfo: info)
-                        throw DejavuError.noMatchingRequestFoundInCache(requestUrl: request.url)
-                    }
-                    
-                    guard let responseRecord = try self.findResponse(database: db, requestRecord: requestRecord) else {
-                        log("cannot find response in cache: \(request.originalUrl)", category: .matchingRequests)
-                        throw DejavuError.noMatchingResponseFoundInCache(requestUrl: request.url)
-                    }
-                    
-                    let response = responseRecord.toHTTPURLResponse(url: request.originalUrl)
-                    completion(response, responseRecord.data, responseRecord.error)
-                } catch let dejavuError as DejavuError {
-                    completion(nil, nil, dejavuError)
-                } catch let error as NSError {
-                    completion(nil, nil, DejavuError.failedToFetchResponseInCache(error))
-                }
-            }
-        }
-    }
-    
-    // swiftlint:enable cyclomatic_complexity
-    
-    private func findResponse(database: Database, requestRecord: RequestRecord) throws -> ResponseRecord? {
-        return try ResponseRecord.filter(Column("requestID") == requestRecord.id).fetchOne(database)
-    }
-    
-    private func findRequest(database: Database, request: Request, instanceCount: Int, requireMatchedInstance: Bool = true) throws -> RequestRecord? {
-        // create a record, so that it will normalize and then it can be used find the desired one
-        let tmp = RequestRecord(request: request, instance: Int64(instanceCount))
-        
-        var foundRecord = try RequestRecord.filter(
-                Column("hash") == tmp.hash &&
-                Column("instance") == tmp.instance &&
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                Column("query") == tmp.query &&
-                Column("body") == tmp.body &&
-                Column("method") == tmp.method
-            ).fetchOne(database)
-        
-        if !requireMatchedInstance {
-            // If one with the correct instance wasn't found,
-            // then search for the last instance and return that.
-            // This causes a lot of problems if not used judiciously.
-            if foundRecord == nil {
-                var foundRecords = try RequestRecord.filter(
-                    Column("hash") == tmp.hash &&
-                        Column("urlNoQuery") == tmp.urlNoQuery &&
-                        Column("query") == tmp.query &&
-                        Column("body") == tmp.body &&
-                        Column("method") == tmp.method
-                    ).fetchAll(database)
-                foundRecords.sort { $0.instance < $1.instance }
-                foundRecord = foundRecords.last
-            }
-        }
-        
-        return foundRecord
-    }
-    
-    private func findOtherAuthenticatedRequest(database: Database, request: Request, instanceCount: Int) throws -> RequestRecord? {
-        // Given an authenticated request, this method finds the same request, but authenticated a different way
-        
-        let tmp = RequestRecord(request: request, instance: Int64(instanceCount))
-        
-        if request.queryContainsAuthentication,
-            let queryTokenRemoved = configuration.normalize(url: request.url, mode: .removeTokenParameters).query?.removingPercentEncoding {
-            if let record = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("instance") == tmp.instance &&
-                    Column("body") == tmp.body &&
-                    Column("method") == tmp.method &&
-                    Column("queryContainsAuthentication") == false &&
-                    Column("query") == queryTokenRemoved &&
-                    Column("headersContainAuthentication") == true // this is where to look for the request with token in headers
-                ).fetchOne(database) {
-                return record
-            }
-        }
-        
-        return nil
-    }
-    
-    private func findUnauthenticatedRequest(database: Database, request: Request, instanceCount: Int) throws -> RequestRecord? {
-        // Given an authenticated request, this method finds the same request, but not authenticated
-        
-        let tmp = RequestRecord(request: request, instance: Int64(instanceCount))
-        
-        if request.queryContainsAuthentication,
-            let queryTokenRemoved = configuration.normalize(url: request.url, mode: .removeTokenParameters).query?.removingPercentEncoding {
-            if let record = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("instance") == tmp.instance &&
-                    Column("body") == tmp.body &&
-                    Column("method") == tmp.method &&
-                    Column("queryContainsAuthentication") == false &&
-                    Column("query") == queryTokenRemoved
-                ).fetchOne(database) {
-                return record
-            }
-        }
-        
-        if request.bodyContainsAuthentication,
-            let body = request.body,
-            let bodyTokenRemoved = configuration.normalizeRequestBody(data: body, mode: .removeTokenParameters) {
-            if let record = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("instance") == tmp.instance &&
-                    Column("query") == tmp.query &&
-                    Column("method") == tmp.method &&
-                    Column("body") == bodyTokenRemoved &&
-                    Column("bodyContainsAuthentication") == false
-                ).fetchOne(database) {
-                return record
-            }
-        }
-        
-        if request.headersContainAuthentication {
-            if let record = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("instance") == tmp.instance &&
-                    Column("query") == tmp.query &&
-                    Column("body") == tmp.body &&
-                    Column("method") == tmp.method &&
-                    Column("headersContainAuthentication") == false
-                ).fetchOne(database) {
-                return record
-            }
-        }
-        
-        return nil
-    }
-    
-    // swiftlint:disable cyclomatic_complexity
-    
-    func findAuthenticatedRequest(database: Database, request: Request, instanceCount: Int) throws -> (response: HTTPURLResponse?, data: Data?, error: Error?)? {
+    func findAuthenticatedRequest(database: Database, request: Request, instanceCount: Int) throws -> (data: Data, response: URLResponse)? {
         // This method searches for a request in the database that is the same as the one
         // being searched for, but has already been authenticated.
         // If found, then return an authentication error.
@@ -388,12 +191,14 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
         let tmp = RequestRecord(request: request, instance: Int64(instanceCount))
         
         if !request.queryContainsAuthentication {
-            let records = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("body") == tmp.body &&
-                    Column("method") == tmp.method &&
-                    Column("queryContainsAuthentication") == true
-                ).fetchAll(database)
+            let records = try RequestRecord
+                .filter(
+                    Column("urlNoQuery") == tmp.urlNoQuery
+                    && Column("body") == tmp.body
+                    && Column("method") == tmp.method
+                    && Column("queryContainsAuthentication") == true
+                )
+                .fetchAll(database)
             
             for r in records {
                 guard let url = URL(string: r.url) else {
@@ -409,12 +214,14 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
         }
         
         if !request.bodyContainsAuthentication {
-            let records = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("query") == tmp.query &&
-                    Column("method") == tmp.method &&
-                    Column("bodyContainsAuthentication") == true
-                ).fetchAll(database)
+            let records = try RequestRecord
+                .filter(
+                    Column("urlNoQuery") == tmp.urlNoQuery
+                    && Column("query") == tmp.query
+                    && Column("method") == tmp.method
+                    && Column("bodyContainsAuthentication") == true
+                )
+                .fetchAll(database)
             
             for r in records {
                 // remove token parameters from record's body and see if it matches
@@ -427,13 +234,15 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
         }
         
         if !request.headersContainAuthentication {
-            let rowCount = try RequestRecord.filter(
-                Column("urlNoQuery") == tmp.urlNoQuery &&
-                    Column("query") == tmp.query &&
-                    Column("body") == tmp.body &&
-                    Column("method") == tmp.method &&
-                    Column("headersContainAuthentication") == true
-                ).fetchCount(database)
+            let rowCount = try RequestRecord
+                .filter(
+                    Column("urlNoQuery") == tmp.urlNoQuery
+                    && Column("query") == tmp.query
+                    && Column("body") == tmp.body
+                    && Column("method") == tmp.method
+                    && Column("headersContainAuthentication") == true
+                )
+                .fetchCount(database)
             if rowCount > 0 {
                 return authenticationRequiredResponse(for: request)
             }
@@ -442,21 +251,75 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
         return nil
     }
     
-    // swiftlint:enable cyclomatic_complexity
+    func authenticationRequiredResponse(for request: Request) -> (data: Data, response: URLResponse)? {
+        guard let response = HTTPURLResponse(url: request.originalUrl, statusCode: 403, httpVersion: nil, headerFields: [:]) else {
+            return nil
+        }
+        let data = Data(
+            #"{"error":{"code":403,"details":[],"message":"You do not have permissions to access this resource or perform this operation.","messageCode":"GWM_0003"}}"#.utf8
+        )
+        return (data: data, response: response)
+    }
     
-    func authenticationRequiredResponse(for request: Request) -> (response: HTTPURLResponse?, data: Data?, error: Error?) {
-        let response = HTTPURLResponse(url: request.originalUrl, statusCode: 403, httpVersion: nil, headerFields: [String: String]())
-        let responseString = "{\"error\":{\"code\":403,\"details\":[],\"message\":\"You do not have permissions to access this resource or perform this operation.\",\"messageCode\":\"GWM_0003\"}}"
-        let data = responseString.data(using: .utf8)
-        return (response, data, nil)
+    func begin() {
+        switch configuration.mode {
+        case .playback:
+            configuration.networkInterceptor.startIntercepting(handler: self)
+        case .cleanRecord, .supplementalRecord:
+            configuration.networkObserver.startObserving(handler: self)
+        }
     }
     
     func end() {
+        log("Ending Dejavu GRDB session: \(configuration.fileURL)", category: .endSession, type: .info)
+        
         // Let the queue clear out and finish it's work before ending.
-        GRDBSession.serialQueue.sync {
-            // Release any database memory
-            self.dbQueue?.releaseMemory()
-            log("Ending Dejavu GRDB session: \(self.configuration.fileURL)", category: .endSession, type: .info)
+        dbQueue.releaseMemory()
+        
+        switch configuration.mode {
+        case .cleanRecord, .supplementalRecord:
+            let networkObserver = configuration.networkObserver
+            networkObserver.stopObserving()
+            
+            let remainingTransactions = state.withLock { state in
+                let transactions = state.transactions
+                state.transactions.removeAll()
+                return transactions
+            }
+            if !remainingTransactions.isEmpty {
+                log("disabled recorder while waiting on requests to finish...", category: .recording, type: .error)
+                
+                // If here, then the network recorder was disabled before all requests had the
+                // chance to finish.
+                // During recording, sometimes an object will fail to load as soon as an http
+                // response is received with an error code, and the test will then end before
+                // the request has a chance to finish loading with an error.
+                // In this case, record what's been observed so far, which is most likely
+                // just the response.
+                for transaction in remainingTransactions.values {
+                    record(
+                        transaction.dejavuRequest,
+                        instanceCount: transaction.instanceCount,
+                        response: transaction.response as? HTTPURLResponse,
+                        data: transaction.data,
+                        error: transaction.error
+                    )
+                }
+            }
+            
+            do {
+                try FileManager.default.moveItem(
+                    at: dbQueue.url,
+                    to: configuration.fileURL
+                )
+            } catch {
+                _ = try? FileManager.default.replaceItemAt(
+                    configuration.fileURL,
+                    withItemAt: configuration.fileURL
+                )
+            }
+        case .playback:
+            configuration.networkInterceptor.stopIntercepting()
         }
     }
     
@@ -591,7 +454,7 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
             // code is nullable, but it won't cast to Int, just Int64
             if let domain = row["failureErrorDomain"] as? String,
                 let code = row["failureErrorCode"] as? Int64 {
-                var userInfo = [String: String]()
+                var userInfo: [String: String] = [:]
                 if let description = row["failureErrorDescription"] as? String {
                     userInfo[NSLocalizedDescriptionKey] = description
                 }
@@ -628,5 +491,194 @@ final class GRDBSession: SessionInternal, @unchecked Sendable {
             let response = HTTPURLResponse(url: url, statusCode: self.statusCode, httpVersion: nil, headerFields: headerFields)!
             return response
         }
+    }
+}
+
+extension GRDBSession /* Transactions */ {
+    struct Transaction: Sendable {
+        var request: URLRequest
+        var dejavuRequest: Request
+        var instanceCount: Int
+        var response: URLResponse?
+        var data: Data?
+        var error: Error?
+    }
+}
+
+extension GRDBSession: DejavuNetworkObservationHandler {
+    func requestWillBeSent(identifier: String, request: URLRequest) {
+        log("requesting: \(request.url?.absoluteString ?? "")", category: .requesting, type: .info)
+        log("requestWillBeSent: \(identifier): \(request.url?.absoluteString ?? "")", category: .recording)
+        
+        guard let dejavuRequest = try? Request(request: request, configuration: configuration) else {
+            return
+        }
+        
+        state.withLock { state in
+            let instance = state.register(dejavuRequest)
+            state.transactions[identifier] = Transaction(request: request, dejavuRequest: dejavuRequest, instanceCount: instance)
+        }
+    }
+    
+    func responseReceived(identifier: String, response: URLResponse) {
+        log("responseReceived: \(identifier)", category: .recording)
+        state.withLock { state in
+            guard var transaction = state.transactions[identifier] else {
+                return
+            }
+            transaction.response = response
+            state.transactions[identifier] = transaction
+        }
+    }
+    
+    func requestFinished(identifier: String, result: Result<Data, Error>) {
+        guard var transaction = state.withLock({ $0.transactions.removeValue(forKey: identifier) }) else {
+            return
+        }
+        
+        switch result {
+        case .success(let responseBody):
+            log("loadingFinished: \(identifier)", category: .recording)
+            // normalize the response
+            transaction.data = configuration.normalizeJsonData(data: responseBody, mode: .response) ?? responseBody
+            // record the response
+            let response = transaction.response as? HTTPURLResponse
+            record(transaction.dejavuRequest, instanceCount: transaction.instanceCount, response: response, data: transaction.data, error: nil)
+        case .failure(let error):
+            log("loadingFailed: \(identifier)", category: .recording)
+            transaction.error = error
+            let response = transaction.response as? HTTPURLResponse
+            record(transaction.dejavuRequest, instanceCount: transaction.instanceCount, response: response, data: nil, error: error)
+        }
+    }
+}
+
+extension Database {
+    func record(for request: Request, instanceCount: Int, requireMatchedInstance: Bool = true) throws -> GRDBSession.RequestRecord? {
+        // create a record, so that it will normalize and then it can be used find the desired one
+        let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
+        
+        var foundRecord = try GRDBSession.RequestRecord
+            .filter(
+                Column("hash") == tmp.hash
+                && Column("instance") == tmp.instance
+                && Column("urlNoQuery") == tmp.urlNoQuery
+                && Column("query") == tmp.query
+                && Column("body") == tmp.body
+                && Column("method") == tmp.method
+            )
+            .fetchOne(self)
+        
+        if !requireMatchedInstance {
+            // If one with the correct instance wasn't found,
+            // then search for the last instance and return that.
+            // This causes a lot of problems if not used judiciously.
+            if foundRecord == nil {
+                var foundRecords = try GRDBSession.RequestRecord
+                    .filter(
+                        Column("hash") == tmp.hash
+                        && Column("urlNoQuery") == tmp.urlNoQuery
+                        && Column("query") == tmp.query
+                        && Column("body") == tmp.body
+                        && Column("method") == tmp.method
+                    )
+                    .fetchAll(self)
+                foundRecords.sort { $0.instance < $1.instance }
+                foundRecord = foundRecords.last
+            }
+        }
+        
+        return foundRecord
+    }
+    
+    func response(for requestRecord: GRDBSession.RequestRecord) throws -> GRDBSession.ResponseRecord? {
+        return try GRDBSession.ResponseRecord.filter(Column("requestID") == requestRecord.id).fetchOne(self)
+    }
+    
+    func otherAuthenticatedRecord(for request: Request, instanceCount: Int, configuration: GRDBSession.Configuration) throws -> GRDBSession.RequestRecord? {
+        // Given an authenticated request, this method finds the same request, but authenticated a different way.
+        
+        let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
+        
+        if request.queryContainsAuthentication,
+            let queryTokenRemoved = configuration.normalize(url: request.url, mode: .removeTokenParameters).query?.removingPercentEncoding {
+            if let record = try GRDBSession.RequestRecord.filter(
+                Column("urlNoQuery") == tmp.urlNoQuery
+                && Column("instance") == tmp.instance
+                && Column("body") == tmp.body
+                && Column("method") == tmp.method
+                && Column("queryContainsAuthentication") == false
+                && Column("query") == queryTokenRemoved
+                && Column("headersContainAuthentication") == true // this is where to look for the request with token in headers
+            ).fetchOne(self) {
+                return record
+            }
+        }
+        
+        return nil
+    }
+    
+    func unauthenticatedRecord(for request: Request, instanceCount: Int, configuration: DejavuSessionConfiguration) throws -> GRDBSession.RequestRecord? {
+        // Given an authenticated request, this method finds the same request, but not authenticated
+        
+        let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
+        
+        if request.queryContainsAuthentication,
+            let queryTokenRemoved = configuration.normalize(url: request.url, mode: .removeTokenParameters).query?.removingPercentEncoding {
+            if let record = try GRDBSession.RequestRecord.filter(
+                Column("urlNoQuery") == tmp.urlNoQuery
+                && Column("instance") == tmp.instance
+                && Column("body") == tmp.body
+                && Column("method") == tmp.method
+                && Column("queryContainsAuthentication") == false
+                && Column("query") == queryTokenRemoved
+            ).fetchOne(self) {
+                return record
+            }
+        }
+        
+        if request.bodyContainsAuthentication,
+            let body = request.body,
+            let bodyTokenRemoved = configuration.normalizeRequestBody(data: body, mode: .removeTokenParameters) {
+            if let record = try GRDBSession.RequestRecord.filter(
+                Column("urlNoQuery") == tmp.urlNoQuery &&
+                    Column("instance") == tmp.instance &&
+                    Column("query") == tmp.query &&
+                    Column("method") == tmp.method &&
+                    Column("body") == bodyTokenRemoved &&
+                    Column("bodyContainsAuthentication") == false
+                ).fetchOne(self) {
+                return record
+            }
+        }
+        
+        if request.headersContainAuthentication {
+            if let record = try GRDBSession.RequestRecord.filter(
+                Column("urlNoQuery") == tmp.urlNoQuery &&
+                    Column("instance") == tmp.instance &&
+                    Column("query") == tmp.query &&
+                    Column("body") == tmp.body &&
+                    Column("method") == tmp.method &&
+                    Column("headersContainAuthentication") == false
+                ).fetchOne(self) {
+                return record
+            }
+        }
+        
+        return nil
+    }
+}
+
+private extension DatabaseQueue {
+    var url: URL { .init(filePath: path) }
+    
+    convenience init(fileURL: URL) throws {
+        try self.init(path: fileURL.path)
+    }
+}
+
+private extension FileManager {
+    func fileExists(at fileURL: URL) -> Bool {
+        return fileExists(atPath: fileURL.path)
     }
 }

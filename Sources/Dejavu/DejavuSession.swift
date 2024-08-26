@@ -20,21 +20,16 @@ public enum DejavuSessionNotifications {
 
 @preconcurrency
 public protocol DejavuSession: Sendable {
-    var configuration: DejavuConfiguration { get }
+    typealias Configuration = DejavuSessionConfiguration
+    
+    var configuration: Configuration { get }
     
     @available(*, deprecated)
     func clearCache()
 }
 
-protocol SessionInternal: DejavuSession {
-    init(configuration: DejavuConfiguration)
+struct DejavuNullSession: DejavuSession {
+    let configuration: Configuration
     
-    func register(request: Request) -> Int
-    @discardableResult
-    func unregister(request: Request) -> Int
-    
-    func record(request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: NSError?)
-    func fetch(request: Request, completion: @escaping @Sendable (URLResponse?, Data?, Error?) -> Void )
-    
-    func end()
+    func clearCache() {}
 }

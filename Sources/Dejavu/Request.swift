@@ -30,13 +30,13 @@ struct Request {
     let method: String?
     let body: Data?
     let headers: Data?
-    let configuration: DejavuConfiguration
+    let configuration: DejavuSessionConfiguration
     let headersContainAuthentication: Bool
     let queryContainsAuthentication: Bool
     let bodyContainsAuthentication: Bool
     let hashString: String
     
-    init(request: URLRequest, configuration: DejavuConfiguration) throws {
+    init(request: URLRequest, configuration: DejavuSessionConfiguration) throws {
         guard let originalUrl = request.url else {
             throw DejavuError.internalError("URLRequest object must have a non-nil url")
         }

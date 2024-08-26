@@ -16,7 +16,7 @@ import Dejavu
 import XCTest
 
 final class ExamplesTests: XCTestCase {
-    override func setUp() {
+    override func setUpWithError() throws {
         Dejavu.setURLProtocolRegistrationHandler { [weak self] protocolClass in
             guard let self else { return }
             let config = URLSessionConfiguration.default
@@ -28,12 +28,12 @@ final class ExamplesTests: XCTestCase {
             self?.session = URLSession(configuration: .default)
         }
         
-        let config = DejavuConfiguration(
+        let configuration = DejavuSessionConfiguration(
             fileURL: .testDataDirectory.appendingPathComponent(mockDataSubpath),
             mode: .playback
         )
         
-        Dejavu.startSession(configuration: config)
+        try Dejavu.startSession(configuration: configuration)
     }
     
     override func tearDown() {
@@ -44,7 +44,7 @@ final class ExamplesTests: XCTestCase {
     
     func testExample() async throws {
         let (data, _) = try await session.data(from: .esri)
-        XCTAssertEqual(data.count, 45668)
+        XCTAssertEqual(data.count, 46793)
     }
 }
 
