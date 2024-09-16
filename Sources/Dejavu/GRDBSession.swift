@@ -315,7 +315,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
             } catch {
                 _ = try? FileManager.default.replaceItemAt(
                     configuration.fileURL,
-                    withItemAt: configuration.fileURL
+                    withItemAt: dbQueue.url
                 )
             }
         case .playback:
