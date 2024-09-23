@@ -273,9 +273,6 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
     func end() {
         log("Ending Dejavu GRDB session: \(configuration.fileURL)", category: .endSession, type: .info)
         
-        // Let the queue clear out and finish it's work before ending.
-        dbQueue.releaseMemory()
-        
         switch configuration.mode {
         case .cleanRecord, .supplementalRecord:
             let networkObserver = configuration.networkObserver
@@ -307,6 +304,10 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
                 }
             }
             
+            // Let the queue clear out and finish it's work before ending.
+            dbQueue.releaseMemory()
+            try? dbQueue.close()
+            
             do {
                 try FileManager.default.moveItem(
                     at: dbQueue.url,
@@ -320,6 +321,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
             }
         case .playback:
             configuration.networkInterceptor.stopIntercepting()
+            try? dbQueue.close()
         }
     }
     
