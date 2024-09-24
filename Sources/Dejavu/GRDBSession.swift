@@ -308,6 +308,11 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
             dbQueue.releaseMemory()
             try? dbQueue.close()
             
+            try? FileManager.default.createDirectory(
+                at: configuration.fileURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            
             do {
                 try FileManager.default.moveItem(
                     at: dbQueue.url,
