@@ -47,85 +47,21 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
     let dbQueue: DatabaseQueue
     
     required init(configuration: DejavuSessionConfiguration) throws {
-        log("Initializing Dejavu GRDB session: \(configuration.fileURL)", category: .beginSession, type: .info)
-        
-        lazy var temporaryURL = URL.temporaryDirectory
-            .appending(component: ProcessInfo().globallyUniqueString)
+        log("Initializing Dejavu GRDB session", category: .beginSession, type: .info)
         
         switch configuration.mode {
         case .cleanRecord:
-            dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
-        case .supplementalRecord:
+            dbQueue = try .dejavu()
+        case .supplementalRecord, .playback:
             if FileManager.default.fileExists(at: configuration.fileURL) {
-                try FileManager.default.copyItem(
-                    at: configuration.fileURL,
-                    to: temporaryURL
-                )
-                dbQueue = try DatabaseQueue(fileURL: temporaryURL)
+                dbQueue = try .inMemoryCopy(from: configuration.fileURL)
             } else {
-                dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
-            }
-        case .playback:
-            if FileManager.default.fileExists(at: configuration.fileURL) {
-                // Only try to open if the file exists. In playback mode, don't
-                // create a database if there isn't one.
-                dbQueue = try DatabaseQueue(fileURL: configuration.fileURL)
-            } else {
-                dbQueue = try Self.makeDatabaseAndSchema(fileURL: temporaryURL)
+                log("No database at \(configuration.fileURL.path)", category: .beginSession, type: .error)
+                dbQueue = try .dejavu()
             }
         }
         
         self.configuration = configuration
-    }
-    
-    func clearCache() {
-        // If db file exists, then delete it.
-        try? FileManager.default.removeItem(at: configuration.fileURL)
-    }
-    
-    private static func makeDatabaseAndSchema(fileURL: URL) throws -> DatabaseQueue {
-        // if db parent directory does not exist, then create it
-        try? FileManager.default.createDirectory(
-            at: fileURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        
-        // Create database.
-        let dbQueue = try DatabaseQueue(fileURL: fileURL)
-        
-        // Create requests table.
-        try dbQueue.inDatabase { db in
-            try db.create(table: "requests") { t in
-                t.column("id", .integer).primaryKey()
-                t.column("url", .text).notNull()
-                t.column("urlNoQuery", .text).notNull()
-                t.column("query", .text)
-                t.column("method", .text)
-                t.column("body", .blob)
-                t.column("headers", .blob)
-                t.column("hash", .text).notNull()
-                t.column("instance", .integer).notNull()
-                t.column("headersContainAuthentication", .boolean).notNull()
-                t.column("queryContainsAuthentication", .boolean).notNull()
-                t.column("bodyContainsAuthentication", .boolean).notNull()
-            }
-        }
-        
-        // Create response table.
-        try dbQueue.inDatabase { db in
-            try db.create(table: "responses") { t in
-                t.column("id", .integer).primaryKey()
-                t.column("requestID", .integer).references("requests", column: "id", onDelete: .cascade, onUpdate: nil, deferred: false)
-                t.column("data", .blob)
-                t.column("headers", .blob)
-                t.column("statusCode", .integer).notNull()
-                t.column("failureErrorDomain", .text)
-                t.column("failureErrorCode", .integer)
-                t.column("failureErrorDescription", .text)
-            }
-        }
-        
-        return dbQueue
     }
     
     func register(_ request: Request) -> Int {
@@ -275,8 +211,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
         
         switch configuration.mode {
         case .cleanRecord, .supplementalRecord:
-            let networkObserver = configuration.networkObserver
-            networkObserver.stopObserving()
+            configuration.networkObserver.stopObserving()
             
             let remainingTransactions = state.withLock { state in
                 let transactions = state.transactions
@@ -306,26 +241,24 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
             
             // Let the queue clear out and finish it's work before ending.
             dbQueue.releaseMemory()
-            try? dbQueue.close()
             
             try? FileManager.default.createDirectory(
                 at: configuration.fileURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
             
+            let backup: DatabaseQueue
             do {
-                try FileManager.default.moveItem(
-                    at: dbQueue.url,
-                    to: configuration.fileURL
-                )
+                backup = try DatabaseQueue(url: configuration.fileURL)
+                try dbQueue.backup(to: backup)
+                try backup.close()
+                try dbQueue.close()
             } catch {
-                _ = try? FileManager.default.replaceItemAt(
-                    configuration.fileURL,
-                    withItemAt: dbQueue.url
-                )
+                return
             }
         case .playback:
             configuration.networkInterceptor.stopIntercepting()
+            dbQueue.releaseMemory()
             try? dbQueue.close()
         }
     }
@@ -679,8 +612,59 @@ extension Database {
 private extension DatabaseQueue {
     var url: URL { .init(filePath: path) }
     
-    convenience init(fileURL: URL) throws {
-        try self.init(path: fileURL.path)
+    convenience init(
+        url: URL,
+        configuration: Configuration = Configuration()
+    ) throws {
+        precondition(url.isFileURL)
+        try self.init(path: url.path, configuration: configuration)
+    }
+    
+    static func inMemoryCopy(
+        from url: URL,
+        configuration: Configuration = Configuration())
+    throws -> DatabaseQueue {
+        precondition(url.isFileURL)
+        return try inMemoryCopy(fromPath: url.path, configuration: configuration)
+    }
+    
+    static func dejavu() throws -> DatabaseQueue {
+        // Create database.
+        let dbQueue = try DatabaseQueue()
+        
+        // Create requests table.
+        try dbQueue.inDatabase { db in
+            try db.create(table: "requests") { t in
+                t.column("id", .integer).primaryKey()
+                t.column("url", .text).notNull()
+                t.column("urlNoQuery", .text).notNull()
+                t.column("query", .text)
+                t.column("method", .text)
+                t.column("body", .blob)
+                t.column("headers", .blob)
+                t.column("hash", .text).notNull()
+                t.column("instance", .integer).notNull()
+                t.column("headersContainAuthentication", .boolean).notNull()
+                t.column("queryContainsAuthentication", .boolean).notNull()
+                t.column("bodyContainsAuthentication", .boolean).notNull()
+            }
+        }
+        
+        // Create response table.
+        try dbQueue.inDatabase { db in
+            try db.create(table: "responses") { t in
+                t.column("id", .integer).primaryKey()
+                t.column("requestID", .integer).references("requests", column: "id", onDelete: .cascade, onUpdate: nil, deferred: false)
+                t.column("data", .blob)
+                t.column("headers", .blob)
+                t.column("statusCode", .integer).notNull()
+                t.column("failureErrorDomain", .text)
+                t.column("failureErrorCode", .integer)
+                t.column("failureErrorDescription", .text)
+            }
+        }
+        
+        return dbQueue
     }
 }
 

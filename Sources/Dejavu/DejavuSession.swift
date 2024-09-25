@@ -23,9 +23,6 @@ public protocol DejavuSession: Sendable {
     typealias Configuration = DejavuSessionConfiguration
     
     var configuration: Configuration { get }
-    
-    @available(*, deprecated)
-    func clearCache()
 }
 
 struct DejavuNullSession: DejavuSession {
