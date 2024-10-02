@@ -18,11 +18,9 @@ internal import os
 
 /// A configuration specifies important Dejavu behavior. A configuration is
 /// needed to start a new session.
-public final class DejavuConfiguration: Sendable {
+public final class DejavuSessionConfiguration: Sendable {
     /// A mode of operation for the Dejavu session.
     public enum Mode: Sendable {
-        /// Requests and responses go out over the network as normal.
-        case disabled
         /// First deletes the cache, then records any network traffic to the
         /// cache.
         case cleanRecord
@@ -343,7 +341,12 @@ public final class DejavuConfiguration: Sendable {
     }
 }
 
-struct MultipartRequestBody {
+/// A configuration specifies important Dejavu behavior. A configuration is
+/// needed to start a new session.
+@available(*, deprecated, renamed: "DejavuSessionConfiguration")
+public typealias DejavuConfiguration = DejavuSessionConfiguration
+
+private struct MultipartRequestBody {
     static let newLine = "\r\n"
     static let doubleNewLine = newLine + newLine
     static let boundary = "--AaB03x"
@@ -351,7 +354,7 @@ struct MultipartRequestBody {
     
     struct Section {
         let contents: String
-        let configuration: DejavuConfiguration
+        let configuration: DejavuSessionConfiguration
         
         func normalized() -> String {
             let comps = contents.components(separatedBy: MultipartRequestBody.doubleNewLine)
@@ -378,9 +381,9 @@ struct MultipartRequestBody {
     
     let original: String
     let sections: [Section]
-    let configuration: DejavuConfiguration
+    let configuration: DejavuSessionConfiguration
     
-    init(original: String, configuration: DejavuConfiguration) {
+    init(original: String, configuration: DejavuSessionConfiguration) {
         self.original = original
         
         var sections = [Section]()

@@ -26,23 +26,15 @@ public enum Dejavu {
     /// Starts a new Dejavu session.
     /// - Parameter configuration: The configuration for the new session.
     /// - Returns: The new session.
-    public static func startSession(configuration: DejavuConfiguration) -> DejavuSession {
+    public static func startSession(configuration: DejavuSessionConfiguration) throws -> DejavuSession {
         // end current session
         endSession()
         
         // create new session
-        let session = GRDBSession(configuration: configuration)
+        let session = try GRDBSession(configuration: configuration)
         _currentSession.withLock { $0 = session }
         
-        // enable playing back or recording
-        switch configuration.mode {
-        case .playback:
-            Player.shared.enable(session: session, networkInterceptor: configuration.networkInterceptor)
-        case .cleanRecord, .supplementalRecord:
-            NetworkRecorder.shared.enable(session: session, networkObserver: configuration.networkObserver)
-        case .disabled:
-            break
-        }
+        session.begin()
         
         log("Dejavu session started", category: .beginSession, type: .info)
         
@@ -75,16 +67,6 @@ public enum Dejavu {
         }
         
         guard let session else { return }
-            
-        // disable playback or recording
-        switch session.configuration.mode {
-        case .playback:
-            Player.shared.disable()
-        case .cleanRecord, .supplementalRecord:
-            NetworkRecorder.shared.disable()
-        case .disabled:
-            break
-        }
         
         // call end on session
         session.end()

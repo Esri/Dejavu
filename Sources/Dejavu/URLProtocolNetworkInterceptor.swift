@@ -82,12 +82,14 @@ final class InterceptorURLProtocol: URLProtocol, @unchecked Sendable {
             log("canInit called with no handler", type: .error)
             return
         }
-        
-        handler.interceptRequest(request: request) { [weak self] result in
+        Task.detached { [request, weak self] in
+            let result = await Task { try await handler.interceptRequest(request) }.result
+            
             guard let self,
                   let client else {
                 return
             }
+            
             switch result {
             case .success(let (data, response)):
                 client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
