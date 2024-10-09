@@ -43,6 +43,10 @@ let package = Package(
                 .enableExperimentalFeature("AccessLevelOnImport"),
                 .enableExperimentalFeature("StrictConcurrency")
             ]
+        ),
+        .testTarget(
+            name: "DejavuTests",
+            dependencies: ["Dejavu"]
         )
     ]
 )
