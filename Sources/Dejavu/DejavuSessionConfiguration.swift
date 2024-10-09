@@ -271,7 +271,7 @@ public final class DejavuSessionConfiguration: Sendable {
         }
         
         /// ASCII encoded strings with multipart bodies cannot be parsed.
-        if String(data: data, encoding: .ascii) != nil, ignoreMultipartRequestBody {
+        if data.isMultipartBody, ignoreMultipartRequestBody {
             // Return nil. Ignoring the filename portion of multipart request bodies is inconsistent.
             return nil
         }
@@ -410,5 +410,15 @@ private struct MultipartRequestBody {
     
     func normalizedData() -> Data {
         return normalized().data(using: .utf8)!
+    }
+}
+
+extension Data {
+    /// A Boolean value that indicates whether this data appears to be a multipart request body.
+    /// Note: This only checks a small prefix because sometimes the whole data
+    /// cannot be decoded into a string.
+    var isMultipartBody: Bool {
+        guard let prefixData = "\r\n--AaB03x".data(using: .ascii) else { return false }
+        return range(of: prefixData)?.lowerBound == 0
     }
 }
