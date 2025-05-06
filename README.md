@@ -10,7 +10,7 @@
 
 Use Dejavu to mock network requests in Swift tests making them faster and more reliable. First use Dejavu to record network activity. From then on Dejavu can playback the original network request, exactly as it ran the first time. Dejavu stores requests and responses in a sqlite database.
 
-Dejavu is used to help test both the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift) and its associated [Toolkit](https://github.com/Esri/arcgis-maps-sdk-swift-toolkit).
+Dejavu is used to help test the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
 
 ## Example
 
