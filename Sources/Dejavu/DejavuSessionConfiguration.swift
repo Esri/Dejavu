@@ -31,6 +31,16 @@ public final class DejavuSessionConfiguration: Sendable {
         case playback
     }
     
+    /// How instance counts should be handled when fetching requests
+    public enum InstanceCountBehavior: Sendable {
+        /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount
+        case strict
+        /// If no request found matching instanceCount, fall back to first matching request
+        case fallbackToFirstRequest
+        /// If no request found matching instanceCount, fall back to last matching request
+        case fallbackToLastRequest
+    }
+    
     /// The location to store mock data.
     public let fileURL: URL
     /// The mode of operation for the Dejavu session.
@@ -39,6 +49,8 @@ public final class DejavuSessionConfiguration: Sendable {
     public let networkObserver: DejavuNetworkObserver
     /// Intercepts network traffic during the session.
     public let networkInterceptor: DejavuNetworkInterceptor
+    /// How instance counts should be handled when fetching requests
+    public let instanceCountBehavior: InstanceCountBehavior = .strict
     
     /// Replacements for query parameters.
     @preconcurrency public var queryParameterReplacements: [String: any Sendable] {

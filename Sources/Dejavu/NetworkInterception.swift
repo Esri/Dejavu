@@ -38,7 +38,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
         return try await withCheckedThrowingContinuation { continuation in
             dbQueue.asyncWriteWithoutTransaction { [configuration] db in
                 do {
-                    var foundRecord = try db.record(for: request, instanceCount: instanceCount, requireMatchedInstance: true)
+                    var foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .strict)
                     
                     if foundRecord == nil {
                         // If can't find, then search for same authenticated request, but look for
@@ -60,10 +60,15 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                     if foundRecord == nil {
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
                         if self.configuration.urlsToIgnoreInstanceCount.contains(request.url) {
-                            foundRecord = try db.record(for: request, instanceCount: instanceCount, requireMatchedInstance: false)
+                            foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallbackToLastRequest)
                             log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
                         } else {
-                            log("could not find response, consider ignoring the instance count for: \(request.url)")
+                            if self.configuration.instanceCountBehavior == .strict {
+                                log("could not find response, consider ignoring the instance count for: \(request.url), or changing the instanceCountBehavior to: .fallbackToLastRequest or .fallbackToFirstRequest")
+                            } else {
+                                foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
+                                log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            }
                         }
                     }
                     
