@@ -94,6 +94,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                                 info["query"] = query
                             }
                             if let body = request.body, let bodyString = String(data: body, encoding: .utf8) {
+                                log("  - body \(bodyString) ", category: .matchingRequests)
                                 info["body"] = bodyString
                             }
                             NotificationCenter.default.post(name: DejavuSessionNotifications.didFailToFindRequestInCache, object: self, userInfo: info)
