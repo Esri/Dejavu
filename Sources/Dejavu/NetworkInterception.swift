@@ -65,7 +65,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                         } else {
                             switch self.configuration.instanceCountBehavior {
                             case .strict:
-                                log("could not find response, consider ignoring the instance count for: \(request.url), or changing the instanceCountBehavior to: .fallBackTo(.last) or .fallBackTo(.first)")
+                                log("could not find response, consider ignoring the instance count for: \(request.url), or changing 'instanceCountBehavior' to 'fallBackTo'")
                             case .fallBackTo(.last), .fallBackTo(.first):
                                 foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
                                 log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
