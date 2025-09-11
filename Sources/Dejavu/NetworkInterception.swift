@@ -60,12 +60,13 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                     if foundRecord == nil {
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
                         if self.configuration.urlsToIgnoreInstanceCount.contains(where: { request.url.absoluteString.contains($0.absoluteString) }) {
-                            foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallbackToLastRequest)
+                            foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallBackTo(.last))
                             log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
                         } else {
-                            if self.configuration.instanceCountBehavior == .strict {
-                                log("could not find response, consider ignoring the instance count for: \(request.url), or changing the instanceCountBehavior to: .fallbackToLastRequest or .fallbackToFirstRequest")
-                            } else {
+                            switch self.configuration.instanceCountBehavior {
+                            case .strict:
+                                log("could not find response, consider ignoring the instance count for: \(request.url), or changing the instanceCountBehavior to: .fallBackTo(.last) or .fallBackTo(.first)")
+                            case .fallBackTo(.last), .fallBackTo(.first):
                                 foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
                                 log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
                             }

@@ -30,17 +30,32 @@ public final class DejavuSessionConfiguration: Sendable {
         /// Intercepts requests and gets the responses from the cache.
         case playback
     }
-    
+
     /// How instance counts should be handled when fetching requests
-    public enum InstanceCountBehavior: Sendable {
+    public enum InstanceCountBehavior: Sendable, Equatable {
         /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount
         case strict
-        /// If no request found matching instanceCount, fall back to first matching request
-        case fallbackToFirstRequest
-        /// If no request found matching instanceCount, fall back to last matching request
-        case fallbackToLastRequest
+        /// If no request found matching instanceCount, fall back to first or last matching request
+        case fallBackTo(_ request: FallbackRequest)
+
+        public static func ==(lhs: Self, rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case (.strict, .strict):
+                return true
+            case (.fallBackTo(let lhsFallbackRequest), .fallBackTo(let rhsFallbackRequest)):
+                return lhsFallbackRequest == rhsFallbackRequest
+            default:
+                return false
+            }
+        }
     }
-    
+
+    /// When falling back to request that does not match instanceCount, we can fall back to first or last matching request
+    public enum FallbackRequest: Sendable {
+        case first
+        case last
+    }
+
     /// The location to store mock data.
     public let fileURL: URL
     /// The mode of operation for the Dejavu session.
@@ -49,8 +64,6 @@ public final class DejavuSessionConfiguration: Sendable {
     public let networkObserver: DejavuNetworkObserver
     /// Intercepts network traffic during the session.
     public let networkInterceptor: DejavuNetworkInterceptor
-    /// How instance counts should be handled when fetching requests
-    public let instanceCountBehavior: InstanceCountBehavior = .strict
     
     /// Replacements for query parameters.
     @preconcurrency public var queryParameterReplacements: [String: any Sendable] {
@@ -97,7 +110,12 @@ public final class DejavuSessionConfiguration: Sendable {
         get { state.withLock(\.urlsToIgnoreInstanceCount) }
         set { state.withLock { $0.urlsToIgnoreInstanceCount = newValue } }
     }
-    
+    /// How instance counts should be handled when fetching requests
+    public var instanceCountBehavior: InstanceCountBehavior {
+        get { state.withLock(\.instanceCountBehavior) }
+        set { state.withLock { $0.instanceCountBehavior = newValue } }
+    }
+
     /// Authentication token parameter keys.
     public var authenticationTokenParameterKeys: [String] {
         get { state.withLock(\.authenticationTokenParameterKeys) }
@@ -130,7 +148,9 @@ public final class DejavuSessionConfiguration: Sendable {
         /// Use this judiciously when
         /// problems arise with certain static tests where responses wouldn't change.
         var urlsToIgnoreInstanceCount: [URL] = []
-        
+        /// How instance counts should be handled when fetching requests
+        var instanceCountBehavior: InstanceCountBehavior = .strict
+
         /// Authentication token parameter keys.
         var authenticationTokenParameterKeys: [String] = []
         /// Authentication header parameter keys.

@@ -524,7 +524,7 @@ extension Database {
                     )
                     .fetchAll(self)
                 foundRecords.sort { $0.instance < $1.instance }
-                foundRecord = instanceCountBehavior == .fallbackToLastRequest ? foundRecords.last : foundRecords.first
+                foundRecord = instanceCountBehavior == .fallBackTo(.last) ? foundRecords.last : foundRecords.first
             }
         }
         
