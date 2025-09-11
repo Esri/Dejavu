@@ -31,14 +31,14 @@ public final class DejavuSessionConfiguration: Sendable {
         case playback
     }
     
-    /// How instance counts should be handled when fetching requests
+    /// Determines instance count handling when fetching requests.
     public enum InstanceCountBehavior: Sendable, Equatable {
-        /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount
+        /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount.
         case strict
-        /// If no request found matching instanceCount, fall back to first or last matching request
+        /// If no request found matching instanceCount, fall back to first or last matching request.
         case fallBackTo(_ request: FallbackRequest)
 
-        /// When falling back to request that does not match instanceCount, we can fall back to first or last matching request
+        /// When falling back to a request that does not match instanceCount, we can fall back to the first or last matching request.
         public enum FallbackRequest: Sendable, Equatable {
             case first
             case last
