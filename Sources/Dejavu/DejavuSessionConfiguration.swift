@@ -150,7 +150,7 @@ public final class DejavuSessionConfiguration: Sendable {
         var urlsToIgnoreInstanceCount: [URL] = []
         /// How instance counts should be handled when fetching requests
         var instanceCountBehavior: InstanceCountBehavior = .strict
-
+        
         /// Authentication token parameter keys.
         var authenticationTokenParameterKeys: [String] = []
         /// Authentication header parameter keys.
