@@ -30,7 +30,7 @@ public final class DejavuSessionConfiguration: Sendable {
         /// Intercepts requests and gets the responses from the cache.
         case playback
     }
-
+    
     /// How instance counts should be handled when fetching requests
     public enum InstanceCountBehavior: Sendable, Equatable {
         /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount
