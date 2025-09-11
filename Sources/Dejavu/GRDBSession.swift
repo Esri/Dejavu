@@ -494,7 +494,7 @@ extension GRDBSession: DejavuNetworkObservationHandler {
 }
 
 extension Database {
-    func record(for request: Request, instanceCount: Int, instanceCountBehavior: DejavuSessionConfiguration.InstanceCountBehavior) throws -> GRDBSession.RequestRecord? {
+    func record(for request: Request, instanceCount: Int, instanceCountBehavior: DejavuSessionConfiguration.InstanceCountBehavior = .strict) throws -> GRDBSession.RequestRecord? {
         // create a record, so that it will normalize and then it can be used find the desired one
         let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
         
