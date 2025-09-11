@@ -38,22 +38,11 @@ public final class DejavuSessionConfiguration: Sendable {
         /// If no request found matching instanceCount, fall back to first or last matching request
         case fallBackTo(_ request: FallbackRequest)
 
-        public static func ==(lhs: Self, rhs: Self) -> Bool {
-            switch (lhs, rhs) {
-            case (.strict, .strict):
-                return true
-            case (.fallBackTo(let lhsFallbackRequest), .fallBackTo(let rhsFallbackRequest)):
-                return lhsFallbackRequest == rhsFallbackRequest
-            default:
-                return false
-            }
+        /// When falling back to request that does not match instanceCount, we can fall back to first or last matching request
+        public enum FallbackRequest: Sendable, Equatable {
+            case first
+            case last
         }
-    }
-
-    /// When falling back to request that does not match instanceCount, we can fall back to first or last matching request
-    public enum FallbackRequest: Sendable {
-        case first
-        case last
     }
 
     /// The location to store mock data.

@@ -494,7 +494,7 @@ extension GRDBSession: DejavuNetworkObservationHandler {
 }
 
 extension Database {
-    func record(for request: Request, instanceCount: Int, instanceCountBehavior: DejavuSessionConfiguration.InstanceCountBehavior = .strict) throws -> GRDBSession.RequestRecord? {
+    func record(for request: Request, instanceCount: Int, instanceCountBehavior: DejavuSessionConfiguration.InstanceCountBehavior) throws -> GRDBSession.RequestRecord? {
         // create a record, so that it will normalize and then it can be used find the desired one
         let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
         
@@ -509,7 +509,7 @@ extension Database {
             )
             .fetchOne(self)
         
-        if instanceCountBehavior != .strict {
+        if case let .fallBackTo(fallbackRequest) = instanceCountBehavior {
             // If one with the correct instance wasn't found,
             // then search for the last instance and return that.
             // This causes a lot of problems if not used judiciously.
@@ -524,7 +524,10 @@ extension Database {
                     )
                     .fetchAll(self)
                 foundRecords.sort { $0.instance < $1.instance }
-                foundRecord = instanceCountBehavior == .fallBackTo(.last) ? foundRecords.last : foundRecords.first
+                foundRecord = switch fallbackRequest {
+                case .first: foundRecords.first
+                case .last: foundRecords.last
+                }
             }
         }
         
