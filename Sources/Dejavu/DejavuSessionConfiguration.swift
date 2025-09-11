@@ -115,7 +115,7 @@ public final class DejavuSessionConfiguration: Sendable {
         get { state.withLock(\.instanceCountBehavior) }
         set { state.withLock { $0.instanceCountBehavior = newValue } }
     }
-
+    
     /// Authentication token parameter keys.
     public var authenticationTokenParameterKeys: [String] {
         get { state.withLock(\.authenticationTokenParameterKeys) }
