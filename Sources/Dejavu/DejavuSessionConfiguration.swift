@@ -37,14 +37,14 @@ public final class DejavuSessionConfiguration: Sendable {
         case strict
         /// If no request found matching instanceCount, fall back to first or last matching request.
         case fallBackTo(_ request: FallbackRequest)
-
+        
         /// When falling back to a request that does not match instanceCount, we can fall back to the first or last matching request.
         public enum FallbackRequest: Sendable, Equatable {
             case first
             case last
         }
     }
-
+    
     /// The location to store mock data.
     public let fileURL: URL
     /// The mode of operation for the Dejavu session.
