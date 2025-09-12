@@ -61,7 +61,9 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
                         if self.configuration.urlsToIgnoreInstanceCount.contains(where: { request.url.absoluteString.contains($0.absoluteString) }) {
                             foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallBackTo(.last))
-                            log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            if foundRecord != nil {
+                                log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            }
                         } else {
                             switch self.configuration.instanceCountBehavior {
                             case .strict:
