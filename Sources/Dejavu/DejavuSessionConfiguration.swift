@@ -35,6 +35,7 @@ public final class DejavuSessionConfiguration: Sendable {
     public enum InstanceCountBehavior: Sendable, Equatable {
         /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount.
         case strict
+        
         /// When falling back to a request that does not match `instanceCount`, we can fall back to the first or last matching request.
         public enum FallbackRequest: Sendable, Equatable {
             case first
