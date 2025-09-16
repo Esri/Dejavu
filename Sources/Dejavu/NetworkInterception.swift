@@ -45,7 +45,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                         // one in the cache that is authenticated in a different way.
                         foundRecord = try db.otherAuthenticatedRecord(for: request, instanceCount: instanceCount, configuration: configuration)
                         if foundRecord != nil {
-                            log("could only find version of this request that was authenticated as well, but in a different way: \(request.originalUrl)", category: .matchingRequests, type: .error)
+                            log("could only find version of this request that was authenticated as well, but in a different way: \(request.url)", category: .matchingRequests, type: .error)
                         }
                     }
                     
@@ -53,7 +53,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                         // If still can't find, then search for un-authenticated version of the request.
                         foundRecord = try db.unauthenticatedRecord(for: request, instanceCount: instanceCount, configuration: configuration)
                         if foundRecord != nil {
-                            log("could only find unauthenticated version of this request: \(request.originalUrl)", category: .matchingRequests, type: .error)
+                            log("could only find unauthenticated version of this request: \(request.url)", category: .matchingRequests, type: .error)
                         }
                     }
                     
@@ -61,7 +61,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
                         if self.configuration.urlsToIgnoreInstanceCount.contains(request.url) {
                             foundRecord = try db.record(for: request, instanceCount: instanceCount, requireMatchedInstance: false)
-                            log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            log("could only find version of this request with a different instance count: \(request.url), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
                         } else {
                             log("could not find response, consider ignoring the instance count for: \(request.url)")
                         }
@@ -78,22 +78,23 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                                 continuation.resume(throwing: DejavuError.internalError("No response or error was found for request"))
                             }
                         } else {
-                            log("cannot find response in cache: \(request.originalUrl)", category: .matchingRequests)
+                            log("cannot find response in cache: \(request.url)", category: .matchingRequests)
                             continuation.resume(throwing: DejavuError.noMatchingResponseFoundInCache(requestUrl: request.url))
                         }
                     } else {
                         // see if the same request (already authenticated) exists
                         if let challenge = try self.findAuthenticatedRequest(database: db, request: request, instanceCount: instanceCount) {
-                            log("returning auth error for request: \(request.originalUrl)", category: .matchingRequests)
+                            log("returning auth error for request: \(request.url)", category: .matchingRequests)
                             continuation.resume(returning: challenge)
                         } else {
-                            log("cannot find request in cache: \(request.originalUrl), instanceCount: \(instanceCount), hash: \(request.hashString), hca: \(request.headersContainAuthentication), qca: \(request.queryContainsAuthentication), bca: \(request.bodyContainsAuthentication), method: \(request.method ?? "null")", category: .matchingRequests, type: .error)
-                            log("  - query \(request.originalUrl.query?.removingPercentEncoding ?? "") ", category: .matchingRequests)
+                            log("cannot find request in cache: \(request.url), instanceCount: \(instanceCount), hash: \(request.hashString), hca: \(request.headersContainAuthentication), qca: \(request.queryContainsAuthentication), bca: \(request.bodyContainsAuthentication), method: \(request.method ?? "null")", category: .matchingRequests, type: .error)
                             var info: [AnyHashable: Any] = ["URL": request.url]
                             if let query = request.query {
+                                log("  - query \(query) ", category: .matchingRequests, type: .error)
                                 info["query"] = query
                             }
                             if let body = request.body, let bodyString = String(data: body, encoding: .utf8) {
+                                log("  - body \(bodyString) ", category: .matchingRequests, type: .error)
                                 info["body"] = bodyString
                             }
                             NotificationCenter.default.post(name: DejavuSessionNotifications.didFailToFindRequestInCache, object: self, userInfo: info)
