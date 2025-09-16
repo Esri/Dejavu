@@ -31,6 +31,21 @@ public final class DejavuSessionConfiguration: Sendable {
         case playback
     }
     
+    /// Determines instance count handling when fetching requests.
+    public enum InstanceCountBehavior: Sendable, Equatable {
+        /// Requires that instanceCount matches when fetching request, unless specified in urlsToIgnoreInstanceCount.
+        case strict
+        
+        /// When falling back to a request that does not match `instanceCount`, we can fall back to the first or last matching request.
+        public enum FallbackRequest: Sendable, Equatable {
+            case first
+            case last
+        }
+        
+        /// If no request found matching `instanceCount`, fall back to first or last matching request.
+        case fallBackTo(_ request: FallbackRequest)
+    }
+    
     /// The location to store mock data.
     public let fileURL: URL
     /// The mode of operation for the Dejavu session.
@@ -85,6 +100,11 @@ public final class DejavuSessionConfiguration: Sendable {
         get { state.withLock(\.urlsToIgnoreInstanceCount) }
         set { state.withLock { $0.urlsToIgnoreInstanceCount = newValue } }
     }
+    /// How instance counts should be handled when fetching requests
+    public var instanceCountBehavior: InstanceCountBehavior {
+        get { state.withLock(\.instanceCountBehavior) }
+        set { state.withLock { $0.instanceCountBehavior = newValue } }
+    }
     
     /// Authentication token parameter keys.
     public var authenticationTokenParameterKeys: [String] {
@@ -118,6 +138,8 @@ public final class DejavuSessionConfiguration: Sendable {
         /// Use this judiciously when
         /// problems arise with certain static tests where responses wouldn't change.
         var urlsToIgnoreInstanceCount: [URL] = []
+        /// How instance counts should be handled when fetching requests
+        var instanceCountBehavior: InstanceCountBehavior = .strict
         
         /// Authentication token parameter keys.
         var authenticationTokenParameterKeys: [String] = []

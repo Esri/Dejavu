@@ -38,7 +38,7 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
         return try await withCheckedThrowingContinuation { continuation in
             dbQueue.asyncWriteWithoutTransaction { [configuration] db in
                 do {
-                    var foundRecord = try db.record(for: request, instanceCount: instanceCount, requireMatchedInstance: true)
+                    var foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .strict)
                     
                     if foundRecord == nil {
                         // If can't find, then search for same authenticated request, but look for
@@ -59,11 +59,21 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                     
                     if foundRecord == nil {
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
-                        if self.configuration.urlsToIgnoreInstanceCount.contains(request.url) {
-                            foundRecord = try db.record(for: request, instanceCount: instanceCount, requireMatchedInstance: false)
-                            log("could only find version of this request with a different instance count: \(request.url), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                        if self.configuration.urlsToIgnoreInstanceCount.contains(where: { request.url.absoluteString.contains($0.absoluteString) }) {
+                            foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallBackTo(.last))
+                            if foundRecord != nil {
+                                log("could only find version of this request with a different instance count: \(request.url), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            }
                         } else {
-                            log("could not find response, consider ignoring the instance count for: \(request.url)")
+                            switch self.configuration.instanceCountBehavior {
+                            case .strict:
+                                log("could not find request, consider ignoring the instance count for: \(request.url), or changing 'instanceCountBehavior' to 'fallBackTo'")
+                            case .fallBackTo:
+                                foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
+                                if foundRecord != nil {
+                                    log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                                }
+                            }
                         }
                     }
                     
