@@ -85,6 +85,11 @@ public final class DejavuSessionConfiguration: Sendable {
         get { state.withLock(\.headersToRemove) }
         set { state.withLock { $0.headersToRemove = newValue } }
     }
+    /// Ignore logging requests/responses for these errors.
+    public var requestErrorsToIgnore: [NSError] {
+        get { state.withLock(\.requestErrorsToIgnore) }
+        set { state.withLock { $0.requestErrorsToIgnore = newValue } }
+    }
     /// A Boolean value indicating whether multipart request bodies should be
     /// ignored.
     public var ignoreMultipartRequestBody: Bool {
@@ -130,6 +135,8 @@ public final class DejavuSessionConfiguration: Sendable {
         var headerReplacements: [String: any Sendable] = [:]
         /// Header entries to be removed.
         var headersToRemove: [String] = []
+        /// Ignore logging requests/responses for these errors.
+        var requestErrorsToIgnore: [NSError] = []
         /// A Boolean value indicating whether multipart request bodies should be ignored.
         var ignoreMultipartRequestBody = true
         

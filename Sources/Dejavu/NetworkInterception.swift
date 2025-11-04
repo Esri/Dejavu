@@ -58,20 +58,31 @@ extension GRDBSession: DejavuNetworkInterceptionHandler {
                     }
                     
                     if foundRecord == nil {
+                        let lastMatchingRequest = try db.record(
+                            for: request,
+                            instanceCount: instanceCount,
+                            instanceCountBehavior: .fallBackTo(.last)
+                        )
                         // If still can't find, then check to see if it is a URL where the instanceCount can be ignored.
                         if self.configuration.urlsToIgnoreInstanceCount.contains(where: { request.url.absoluteString.contains($0.absoluteString) }) {
-                            foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: .fallBackTo(.last))
-                            if foundRecord != nil {
-                                log("could only find version of this request with a different instance count: \(request.url), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                            if let lastMatchingRequest {
+                                foundRecord = lastMatchingRequest
+                                log("could only find version of this request with a different instance count: \(request.originalUrl), lastMatchingInstanceCount: \(lastMatchingRequest.instance), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .info)
                             }
                         } else {
                             switch self.configuration.instanceCountBehavior {
                             case .strict:
-                                log("could not find request, consider ignoring the instance count for: \(request.url), or changing 'instanceCountBehavior' to 'fallBackTo'")
+                                if let lastMatchingRequest {
+                                    log("could only find version of this request with a different instance count: \(request.url), lastMatchingInstanceCount: \(lastMatchingRequest.instance), requestedInstanceCount: \(instanceCount), consider ignoring the instance count or changing 'instanceCountBehavior' to 'fallBackTo'", category: .matchingRequests, type: .error)
+                                } else {
+                                    log("could not find request: \(request.url), instanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                                }
                             case .fallBackTo:
-                                foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
-                                if foundRecord != nil {
-                                    log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .error)
+                                if lastMatchingRequest != nil {
+                                    foundRecord = try db.record(for: request, instanceCount: instanceCount, instanceCountBehavior: self.configuration.instanceCountBehavior)
+                                    if foundRecord != nil {
+                                        log("could only find version of this request with a different instance count: \(request.originalUrl), requestedInstanceCount: \(instanceCount)", category: .matchingRequests, type: .info)
+                                    }
                                 }
                             }
                         }

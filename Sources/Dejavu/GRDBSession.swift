@@ -32,12 +32,19 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
         }
         
         @discardableResult
-        mutating func unregister(_ request: Request) -> Int {
+        mutating func unregister(_ request: Request, instanceCount: Int) -> Int {
             guard var instanceCount = instanceCounts[request.hashString] else {
                 return 0
             }
             instanceCount -= 1
             instanceCounts[request.hashString] = instanceCount
+
+            // decrement any higher instance counts with matching request hash
+            //
+            transactions
+                .filter { $0.value.dejavuRequest.hashString == request.hashString && $0.value.instanceCount > instanceCount }
+                .forEach { transactions[$0.key]?.instanceCount -= 1 }
+
             return instanceCount
         }
     }
@@ -69,8 +76,8 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
     }
     
     @discardableResult
-    func unregister(_ request: Request) -> Int {
-        return state.withLock { $0.unregister(request) }
+    func unregister(_ request: Request, instanceCount: Int) -> Int {
+        return state.withLock { $0.unregister(request, instanceCount: instanceCount) }
     }
     
     func record(_ request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: Error?) {
@@ -359,14 +366,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
                 self.headers = try? JSONSerialization.data(withJSONObject: response.allHeaderFields)
             }
             
-            let isCancelledError = error?.domain == NSURLErrorDomain
-                && (error?.code == NSUserCancelledError || error?.code == -999)
-            
-            // Don't record a user cancelled error. If recorded, behavior would be different on
-            // playback, and things wouldn't work right.
-            if !isCancelledError {
-                self.error = error
-            }
+            self.error = error
             
             super.init()
         }
@@ -487,6 +487,15 @@ extension GRDBSession: DejavuNetworkObservationHandler {
         case .failure(let error):
             log("loadingFailed: \(identifier)", category: .recording)
             transaction.error = error
+            
+            // Don't record error if in requestErrorsToIgnore
+            if let nsError = error as? NSError,
+               configuration.requestErrorsToIgnore.contains(where: { $0.domain == nsError.domain && $0.code == nsError.code }) {
+                log("requestErrorsToIgnore (\(nsError.domain): \(nsError.code)): \(identifier): \(transaction.dejavuRequest.originalUrl), skipping recording of request", category: .recording, type: .info)
+                unregister(transaction.dejavuRequest, instanceCount: transaction.instanceCount)
+                return
+            }
+            
             let response = transaction.response as? HTTPURLResponse
             record(transaction.dejavuRequest, instanceCount: transaction.instanceCount, response: response, data: nil, error: error)
         }
