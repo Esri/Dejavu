@@ -24,9 +24,16 @@ public final class DejavuSessionConfiguration: Sendable {
         /// First deletes the cache, then records any network traffic to the
         /// cache.
         case cleanRecord
+        
+        /// When supplemental recording, we can either update existing request instances or insert new instances for matching requests.
+        public enum SupplementalRecordBehavior: Sendable, Equatable {
+            case updateExisting
+            case insertNew
+        }
+        
         /// Records any network traffic to the cache. Does not delete the
-        /// database first.
-        case supplementalRecord
+        /// database first. Will either update existing request instances or insert new instances for matching requests.
+        case supplementalRecord(_ behavior: SupplementalRecordBehavior = .updateExisting)
         /// Intercepts requests and gets the responses from the cache.
         case playback
     }
