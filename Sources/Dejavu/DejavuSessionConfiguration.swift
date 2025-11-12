@@ -36,7 +36,7 @@ public final class DejavuSessionConfiguration: Sendable {
         /// database first.
         case supplementalRecord(_ behavior: SupplementalRecordBehavior)
         /// This is equivalent to `supplementalRecord(.updateExisting)`.
-        static var supplementalRecord: Self {
+        public static var supplementalRecord: Self {
             .supplementalRecord(.updateExisting)
         }
         
