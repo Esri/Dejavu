@@ -204,20 +204,17 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
         return (data: data, response: response)
     }
     
-    func begin() {
+    func begin() throws {
         switch configuration.mode {
         case .playback:
             configuration.networkInterceptor.startIntercepting(handler: self)
         case .cleanRecord, .supplementalRecord:
-            // when supplemental recording and we want to insert new instances, we need to populate previous instance counts from dbQueue
-            if case let .supplementalRecord(behavior) = self.configuration.mode, behavior == .insertNew {
-                state.withLock { state in
-                    do {
-                        state.instanceCounts = try dbQueue.read { db in
-                            try db.queryInstanceCounts()
-                        }
-                    } catch {
-                        log("Error loading instance counts: \(error)", type: .error)
+            // when supplemental recording and we want to insert new instances,
+            // we need to populate previous instance counts from dbQueue
+            if configuration.mode == .supplementalRecord(.insertNew) {
+                try state.withLock { state in
+                    state.instanceCounts = try dbQueue.read { db in
+                        try db.instanceCounts
                     }
                 }
             }
@@ -515,17 +512,20 @@ extension GRDBSession: DejavuNetworkObservationHandler {
 }
 
 extension Database {
-    func queryInstanceCounts() throws -> [String: Int] {
-        var instanceCounts: [String: Int] = [:]
-        let rows = try Row.fetchAll(self, sql: "SELECT hash, MAX(instance) as instanceCount FROM requests GROUP BY hash")
-        for row in rows {
-            let hash: String = row["hash"]
-            let instanceCount: Int = row["instanceCount"]
-            instanceCounts[hash] = instanceCount
+    // Returns maximum instance counts for all request hashes
+    var instanceCounts: [String: Int] {
+        get throws {
+            let rows = try Row.fetchAll(
+                self,
+                sql: "SELECT hash, MAX(instance) as instanceCount FROM requests GROUP BY hash"
+            )
+            return .init(
+                uniqueKeysWithValues: rows.lazy
+                    .map { ($0["hash"], $0["instanceCount"]) }
+            )
         }
-        return instanceCounts
     }
-
+    
     func record(for request: Request, instanceCount: Int, instanceCountBehavior: DejavuSessionConfiguration.InstanceCountBehavior = .strict) throws -> GRDBSession.RequestRecord? {
         // create a record, so that it will normalize and then it can be used find the desired one
         let tmp = GRDBSession.RequestRecord(request: request, instance: Int64(instanceCount))
