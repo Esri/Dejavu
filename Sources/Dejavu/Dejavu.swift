@@ -34,7 +34,7 @@ public enum Dejavu {
         let session = try GRDBSession(configuration: configuration)
         _currentSession.withLock { $0 = session }
         
-        session.begin()
+        try session.begin()
         
         log("Dejavu session started", category: .beginSession, type: .info)
         

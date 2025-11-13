@@ -20,13 +20,27 @@ internal import os
 /// needed to start a new session.
 public final class DejavuSessionConfiguration: Sendable {
     /// A mode of operation for the Dejavu session.
-    public enum Mode: Sendable {
+    public enum Mode: Equatable, Sendable {
         /// First deletes the cache, then records any network traffic to the
         /// cache.
         case cleanRecord
+        
+        /// When supplemental recording, we can either update existing request instances or
+        /// insert new instances for matching requests.
+        public enum SupplementalRecordBehavior: Sendable, Equatable {
+            case updateExisting
+            case insertNew
+        }
+        
         /// Records any network traffic to the cache. Does not delete the
         /// database first.
-        case supplementalRecord
+        case supplementalRecord(_ behavior: SupplementalRecordBehavior)
+        
+        /// This is equivalent to `supplementalRecord(.updateExisting)`.
+        public static var supplementalRecord: Self {
+            .supplementalRecord(.updateExisting)
+        }
+        
         /// Intercepts requests and gets the responses from the cache.
         case playback
     }
