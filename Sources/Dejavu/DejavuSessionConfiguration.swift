@@ -35,6 +35,7 @@ public final class DejavuSessionConfiguration: Sendable {
         /// Records any network traffic to the cache. Does not delete the
         /// database first.
         case supplementalRecord(_ behavior: SupplementalRecordBehavior)
+        
         /// This is equivalent to `supplementalRecord(.updateExisting)`.
         public static var supplementalRecord: Self {
             .supplementalRecord(.updateExisting)
