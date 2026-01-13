@@ -13,15 +13,21 @@ Dejavu is a free, open source network mocking tool created by Esri that you can 
 Dejavu is used by the ArcGIS Maps SDK for Swift team to help test the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
 
 # Tutorial: Setting up and using Dejavu  
+The [Tutorial: Setting up and using Dejavu](./Tutorial) steps you through setting up Dejavu, configuring a session, and using Dejavu.
 
 # Quick reference
 
-* Tutorial: Setting up and using Dejavu
-* Requirements
-* Record requests, play back requests, and more
+* [Tutorial: Setting up and using Dejavu](./Tutorial)
+* [Requirements](#requirements)
+* [Record requests, play back requests, and more](record-requests-play-back-requests-and-more)
 * [A full example of a mocked network test](Examples/ExamplesTests/ExamplesTests.swift)
 * One time setup: [Configure a location to store mocked data](./AdditionalDocumentation/MockedDataSetupInstructions.md)
 * Optional: Use custom network interceptors and observers
+
+# Requirements
+
+* Swift 5.9 / Xcode 15.0 (or newer)
+* iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
 
 ## Record requests, play back requests, and more
 
@@ -54,11 +60,6 @@ Dejavu's modes are:
 - `supplementalRecord` - Records any network traffic to the cache. Does not delete the database first.
 
 - `playback` - Intercepts requests and gets the responses from the cache.
-
-# Requirements
-
-* Swift 5.9 / Xcode 15.0 (or newer)
-* iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
 
 # Issues
 
