@@ -24,7 +24,7 @@ The [Tutorial: Setting up and using Dejavu](./Tutorial) steps you through settin
 * One time setup: [Configure a location to store mocked data](./AdditionalDocumentation/MockedDataSetupInstructions.md)
 * Optional: Use custom network interceptors and observers
 
-# Requirements
+## Requirements
 
 * Swift 5.9 / Xcode 15.0 (or newer)
 * iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
@@ -86,9 +86,9 @@ limitations under the License.
 
 A copy of the license is available in the repository's [LICENSE.txt](LICENSE.txt) file.
 
-
+---
 #### 1. Prepare network interception and observation
-TODO move this to the dejavuconfiguration section after clarifying what is needed when using defaults vs custom
+TODO move this section's intro text to the dejavuconfiguration section after clarifying what is needed when using defaults vs custom interceptors and observers (the snippet below already appears in the tutorial)
 
 Dejavu can be configured to use custom network interceptors and observers. These can be specified when creating the `DejavuConfiguration`.  However, you may choose to use the defaults. The defaults use `URLProtocol`, which does require setup, specifically to tell the `URLSession` you are using what `URLProtocol` classes to [use](https://developer.apple.com/documentation/foundation/urlsessionconfiguration/1411050-protocolclasses).
 
@@ -109,4 +109,5 @@ Dejavu.setURLProtocolUnregistrationHandler { [weak self] protocolClass in
     self?.session = URLSession(configuration: .default)
 }
 ```
+---
 

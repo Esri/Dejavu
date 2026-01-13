@@ -12,7 +12,7 @@ Dejavu allows you to record network requests during tests and replay them later,
 
 This tutorial steps you through the process of integrating Dejavu into a test iOS app. It uses [JSONPlaceholder](https://jsonplaceholder.typicode.com/) to simulate network calls, which is useful in scenarios where the real API might be under development, rate-limited, or unavailable due to connectivity issues. In a geospatial context, this could represent a feed of user-submitted location data or address records, which are critical to test without relying on live endpoints.
 
-# Verify your system meets the requirements
+# Requirements
 
 * Swift 5.9 / Xcode 15.0 (or newer)
 * iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
@@ -39,7 +39,7 @@ This tutorial steps you through the process of integrating Dejavu into a test iO
    - Go to `File > Add Package Dependencies…`.
    - Enter the Dejavu GitHub repository URL: `https://github.com/Esri/dejavu`.
    - Select the latest version and add it to your project.
-#### 4. Adding Dejavu to frameworks and libraries
+#### 4. Add Dejavu to frameworks and libraries
 - To ensure Dejavu is properly integrated into your test target, follow these steps:
     1. Open your Xcode project.
     2. Select the `DejavuDemo` project in the Project Navigator.
@@ -81,11 +81,13 @@ enum NetworkManager {
 - Now let's go modify the `DejavuDemoTests.swift` code.
 
 - **Imports**: We import `XCTest` for testing, `Dejavu` for network mocking, and `DejavuDemo` to access the app's code:
-  ```swift
+
+```swift
 import XCTest
 import Dejavu
 @testable import DejavuDemo
 ```
+
 - **Class Declaration**: `DejavuDemoTests` is a subclass of `XCTestCase`, which provides the testing framework.
 - **Session Variable**: `session` is a `URLSession` instance that will be configured to use Dejavu.
 
