@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/swift-5.9-orange">
 </div>
 
-Dejavu is a free, open source network mocking tool created by Esri that you can use to mock network requests in Swift tests to make the tests faster and more reliable. First, use Dejavu to record network activity. From then on Dejavu can play back the original network request exactly as it ran the first time so that you are always testing against the same baseline, free of network slow-downs or outages. Dejavu stores requests and responses in a SQLite database.
+Dejavu is Esri’s open‑source, Swift‑native library that records real HTTP requests and replays them later, so your test suite runs fast and predictably. It plugs into URLSession via URLProtocol, stores request/response pairs in a SQLite cache, and plays them back on demand--all while fitting neatly into XCTest.
 
 Dejavu is used by the ArcGIS Maps SDK for Swift team to help test the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
 
