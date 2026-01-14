@@ -10,7 +10,7 @@
 
 Dejavu is Esri’s open‑source, Swift‑native library that records real HTTP requests and replays them later, so your test suite runs fast and predictably. It plugs into URLSession via URLProtocol, stores request/response pairs in a SQLite cache, and plays them back on demand--all while fitting neatly into XCTest.
 
-Dejavu is used by the ArcGIS Maps SDK for Swift team to help test the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
+Dejavu is used by the team behind the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
 
 # Tutorial: Setting up and using Dejavu  
 The [Tutorial: Setting up and using Dejavu](./Tutorial) steps you through setting up Dejavu, configuring a session, and using Dejavu.

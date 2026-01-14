@@ -29,7 +29,7 @@ This tutorial steps you through the process of integrating Dejavu into a test iO
 - We need to configure a location to store the data that Dejavu will record and playback.
 - In our current app, we are going to use `/DejavuDemoTests/MockedData`:
 	- First create a new folder named `MockedData` under `DejavuDemo/DejavuDemoTests`
-![Mocked Image Folder](https://raw.githubusercontent.com/harish-kunchala/blog-images/refs/heads/main/dejavu-blog/mocked-data-folder.png)
+![Mocked Data Folder](https://raw.githubusercontent.com/harish-kunchala/blog-images/refs/heads/main/dejavu-blog/mocked-data-folder.png)
 - Under `Xcode > Settings > Locations > Custom Paths` set a custom path named `MOCKED_DATA` and set the absolute path of `MockedData` folder.
 
 ![Custom Path](https://raw.githubusercontent.com/harish-kunchala/blog-images/refs/heads/main/dejavu-blog/custom-paths.png)
@@ -37,7 +37,7 @@ This tutorial steps you through the process of integrating Dejavu into a test iO
 ![Target Info Tab](https://raw.githubusercontent.com/harish-kunchala/blog-images/refs/heads/main/dejavu-blog/target-info-tab.png)
 #### 3. Add Dejavu
    - Go to `File > Add Package Dependencies…`.
-   - Enter the Dejavu GitHub repository URL: `https://github.com/Esri/dejavu`.
+   - Enter the Dejavu GitHub repository URL: `https://github.com/Esri/Dejavu`.
    - Select the latest version and add it to your project.
 #### 4. Add Dejavu to frameworks and libraries
 - To ensure Dejavu is properly integrated into your test target, follow these steps:
@@ -83,8 +83,8 @@ enum NetworkManager {
 - **Imports**: We import `XCTest` for testing, `Dejavu` for network mocking, and `DejavuDemo` to access the app's code:
 
 ```swift
-import XCTest
 import Dejavu
+import XCTest
 @testable import DejavuDemo
 ```
 
@@ -204,8 +204,8 @@ extension URL {
 ```
 You can find the entire `DejavuDemoTests` class [here](https://github.com/harish-kunchala/DejavuDemo/blob/main/DejavuDemoTests/DejavuDemoTests.swift).
 #### 3. Creating the `ContentView`
-- Now that network class and test classes are setup. We can define the UI.
-- We'll user a `List` to show the users' names and emails, and handle any errors that might occur during the network request.
+- Now that network and test classes are set up, we can define the UI.
+- We'll use a `List` to show the users' names and emails, and handle any errors that might occur during the network request.
 - Here's the complete code for our `ContentView`:
 ```swift
 import SwiftUI
@@ -280,7 +280,7 @@ struct User: Codable, Equatable, Identifiable {
 # Outputs
 ## Build Outputs
 - First of all let's make sure that we get an output when we run the app.
-- Our goals is to see a list of 10 users. We expect to see their names and their emails.
+- Our goal is to see a list of 10 users. We expect to see their names and emails.
 ![Build Output](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeG1pcTVpcmIzM2F3ZTNlbHVyMWtrNDhsaTB4eWZyanN5c3V4ZWtyeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/jIpdzXXXYuNkewkWiE/giphy.gif)
 ## Test Outputs
 ### 1. Run Test
@@ -359,7 +359,7 @@ Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
 As you can see, the playback mode significantly reduces the test execution time, demonstrating the efficiency and speed benefits of using Dejavu. This makes it an invaluable tool for faster and more reliable testing.
 
 # Licensing
-Copyright 2023 Esri
+Copyright 2026 Esri
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
