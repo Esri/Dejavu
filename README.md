@@ -8,48 +8,48 @@
     <img src="https://img.shields.io/badge/swift-5.9-orange">
 </div>
 
-Dejavu is Esri’s open‑source, Swift‑native library that records real HTTP requests and replays them later, so your test suite runs fast and predictably. It plugs into URLSession via URLProtocol, stores request/response pairs in a SQLite cache, and plays them back on demand--all while fitting neatly into XCTest.
+Dejavu is Esri’s open‑source, Swift‑native library that records real HTTP requests and replays them later, so your test suite runs fast and predictably. It plugs into `URLSession` via `URLProtocol`, stores request/response pairs in a SQLite cache, and plays them back on demand--all while fitting neatly into XCTest.
 
 Dejavu is used by the team behind the [ArcGIS Maps SDK for Swift](https://github.com/Esri/arcgis-maps-sdk-swift).
 
-# Tutorial: Setting up and using Dejavu  
-The [Tutorial: Setting up and using Dejavu](./Tutorial) steps you through setting up Dejavu, configuring a session, and using Dejavu.
+## Tutorial: Setting up and using Dejavu  
+The [Tutorial: Setting up and using Dejavu](AdditionalDocumentation/Tutorial) steps you through setting up Dejavu, configuring a session, and using Dejavu.
 
-# Quick reference
+## Quick reference
 
-* [Tutorial: Setting up and using Dejavu](./Tutorial)
+* [Tutorial: Setting up and using Dejavu](AdditionalDocumentation/Tutorial)
 * [Requirements](#requirements)
 * [Record requests, play back requests, and more](record-requests-play-back-requests-and-more)
 * [A full example of a mocked network test](Examples/ExamplesTests/ExamplesTests.swift)
 * One time setup: [Configure a location to store mocked data](./AdditionalDocumentation/MockedDataSetupInstructions.md)
 * Optional: Use custom network interceptors and observers
 
-## Requirements
+### Requirements
 
 * Swift 5.9 / Xcode 15.0 (or newer)
-* iOS 15.0, Mac Catalyst 15.0 (minimum deployment targets)
+* iOS 16.0, Mac Catalyst 16.0 (minimum deployment targets)
 
-## Record requests, play back requests, and more
+### Record requests, play back requests, and more
 
-### Record network requests
+#### Record network requests
 
 ```swift
 let config = DejavuConfiguration(fileURL: URL, mode: .cleanRecord)
 Dejavu.startSession(configuration: config)
 ```
-### Play back network requests
+#### Play back network requests
 
 ```swift
 let config = DejavuConfiguration(fileURL: URL, mode: .playback)
 Dejavu.startSession(configuration: config)
 ```
 
-### End the session
+#### End the session
 
 ```swift
 Dejavu.endSession()
 ```
-### Modes
+#### Modes
 
 Dejavu's modes are:
 
@@ -61,15 +61,15 @@ Dejavu's modes are:
 
 - `playback` - Intercepts requests and gets the responses from the cache.
 
-# Issues
+## Issues
 
 Find a bug or want to request a new feature?  Please let us know by [submitting an issue](https://github.com/ArcGIS/Dejavu/issues/new).
 
-# Contributing
+## Contributing
 
 Esri welcomes contributions from anyone and everyone. Please see our [guidelines for contributing](https://github.com/esri/contributing).
 
-# Licensing
+## Licensing
 Copyright 2023 Esri
 
 Licensed under the Apache License, Version 2.0 (the "License");

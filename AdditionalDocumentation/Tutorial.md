@@ -340,6 +340,7 @@ SELECT * FROM responses;
 One of the standout features of Dejavu is its impressive playback speed once the mock data is registered. Here's a comparison to illustrate the benefits:
 
 **Timing in `.cleanRecord` Mode**
+
 ```
 Test Case '-[DejavuDemoTests.DejavuDemoTests testFetchDataSuccessfullyReturnsUsers]' passed (0.068 seconds).
 
@@ -356,6 +357,7 @@ Test Suite 'DejavuDemoTests' passed at 2025-02-06 11:18:54.638.
 
 Executed 1 test, with 0 failures (0 unexpected) in 0.005 (0.005) seconds
 ```
+
 As you can see, the playback mode significantly reduces the test execution time, demonstrating the efficiency and speed benefits of using Dejavu. This makes it an invaluable tool for faster and more reliable testing.
 
 # Licensing
