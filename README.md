@@ -70,13 +70,13 @@ Dejavu.endSession()
 
 Dejavu has 3 modes:
 
-- `.cleanRecord` - First deletes the cache, then records any network traffic to the cache.
+- `cleanRecord` - First deletes the cache, then records any network traffic to the cache.
  
-- `.supplementalRecord` – Records new network traffic to the cache without deleting the existing database. If a matching request is found in the cache, it can either update the existing entry or insert a new one, depending on the configuration:
+- `supplementalRecord(_ behavior: SupplementalRecordBehavior)` – Records new network traffic to the cache without deleting the existing database. If a matching request is found in the cache, it can either update the existing entry or insert a new one, depending on the configuration:
     - `.supplementalRecord(.updateExisting)` / `.supplementalRecord` (default) – Updates the existing cached request when a match is found, based on the instance count.
     - `.supplementalRecord(.insertNew)` – Always inserts a new entry for each request, incrementing the instance count for matching requests.
 
-- `.playback` - Intercepts requests and gets the responses from the cache.
+- `playback` - Intercepts requests and gets the responses from the cache.
 
 ## Requirements
 
