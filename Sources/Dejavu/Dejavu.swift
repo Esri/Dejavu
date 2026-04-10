@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-internal import os
+import os
 
 public enum Dejavu {
     /// The current session.
-    public static var currentSession: DejavuSession? {
+    public static var currentSession: (some DejavuSession)? {
         _currentSession.withLock { $0 }
     }
     
@@ -26,7 +26,7 @@ public enum Dejavu {
     /// Starts a new Dejavu session.
     /// - Parameter configuration: The configuration for the new session.
     /// - Returns: The new session.
-    public static func startSession(configuration: DejavuSessionConfiguration) throws -> DejavuSession {
+    public static func startSession(configuration: DejavuSessionConfiguration) throws -> some DejavuSession {
         // end current session
         endSession()
         

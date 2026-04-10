@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
+
+import GRDB
+import os
 
 /// A type that is able to intercept network requests and send back a programmed response.
 @preconcurrency
 public protocol DejavuNetworkInterceptor: Sendable {
-    func startIntercepting(handler: DejavuNetworkInterceptionHandler)
+    func startIntercepting(handler: any DejavuNetworkInterceptionHandler)
     func stopIntercepting()
 }
 

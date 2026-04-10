@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
-internal import os
+import os
 
 public final class URLProtocolNetworkObserver: Sendable {
     public static let shared = URLProtocolNetworkObserver()
@@ -23,14 +23,14 @@ public final class URLProtocolNetworkObserver: Sendable {
     private init() {}
     
     private struct State: Sendable {
-        var handler: DejavuNetworkObservationHandler?
+        var handler: (any DejavuNetworkObservationHandler)?
         var urlProtocolRegistrationHandler: (@Sendable (AnyClass) -> Void)?
         var urlProtocolUnregistrationHandler: (@Sendable (AnyClass) -> Void)?
     }
     
     private let state = OSAllocatedUnfairLock(initialState: State())
     
-    var handler: DejavuNetworkObservationHandler? { state.withLock(\.handler) }
+    var handler: (any DejavuNetworkObservationHandler)? { state.withLock(\.handler) }
     
     func setURLProtocolRegistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
         state.withLock { $0.urlProtocolRegistrationHandler = handler }
@@ -42,7 +42,7 @@ public final class URLProtocolNetworkObserver: Sendable {
 }
 
 extension URLProtocolNetworkObserver: DejavuNetworkObserver {
-    public func startObserving(handler: DejavuNetworkObservationHandler) {
+    public func startObserving(handler: any DejavuNetworkObservationHandler) {
         let urlProtocolRegistrationHandler = state.withLock { state in
             state.handler = handler
             return state.urlProtocolRegistrationHandler
@@ -84,16 +84,14 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
             return
         }
         
-        Task.detached { [weak self] in
-            guard let self,
-                  let client else {
-                return
-            }
+        Task.detached {
+            guard let client = self.client else { return }
+            
             let identifier = UUID().uuidString
-            handler.requestWillBeSent(identifier: identifier, request: request)
+            handler.requestWillBeSent(identifier: identifier, request: self.request)
             
             do {
-                let (data, response) = try await Self.session.data(for: request)
+                let (data, response) = try await Self.session.data(for: self.request)
                 handler.responseReceived(identifier: identifier, response: response)
                 client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
                 client.urlProtocol(self, didLoad: data)

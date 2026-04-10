@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
-internal import os
+import os
 
 /// A network interceptor that uses URLProtocol registration for network interception.
 public final class URLProtocolNetworkInterceptor: Sendable {
@@ -24,14 +24,14 @@ public final class URLProtocolNetworkInterceptor: Sendable {
     private init() {}
     
     private struct State: Sendable {
-        var handler: DejavuNetworkInterceptionHandler?
+        var handler: (any DejavuNetworkInterceptionHandler)?
         var urlProtocolRegistrationHandler: (@Sendable (AnyClass) -> Void)?
         var urlProtocolUnregistrationHandler: (@Sendable (AnyClass) -> Void)?
     }
     
     private let state = OSAllocatedUnfairLock(initialState: State())
     
-    var handler: DejavuNetworkInterceptionHandler? { state.withLock(\.handler) }
+    var handler: (any DejavuNetworkInterceptionHandler)? { state.withLock(\.handler) }
     
     func setURLProtocolRegistrationHandler(_ handler: @escaping @Sendable (AnyClass) -> Void) {
         state.withLock { $0.urlProtocolRegistrationHandler = handler }
@@ -43,7 +43,7 @@ public final class URLProtocolNetworkInterceptor: Sendable {
 }
 
 extension URLProtocolNetworkInterceptor: DejavuNetworkInterceptor {
-    public func startIntercepting(handler: DejavuNetworkInterceptionHandler) {
+    public func startIntercepting(handler: any DejavuNetworkInterceptionHandler) {
         let urlProtocolRegistrationHandler = state.withLock { state in
             state.handler = handler
             return state.urlProtocolRegistrationHandler
@@ -82,13 +82,10 @@ final class InterceptorURLProtocol: URLProtocol, @unchecked Sendable {
             log("canInit called with no handler", type: .error)
             return
         }
-        Task.detached { [request, weak self] in
+        Task.detached { [request] in
             let result = await Task { try await handler.interceptRequest(request) }.result
             
-            guard let self,
-                  let client else {
-                return
-            }
+            guard let client = self.client else { return }
             
             switch result {
             case .success(let (data, response)):

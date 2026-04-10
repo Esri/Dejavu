@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import Foundation
-
-internal import GRDB
-internal import os
+import GRDB
+import os
 
 final class GRDBSession: DejavuSession, @unchecked Sendable {
     let configuration: DejavuSessionConfiguration
@@ -80,7 +79,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
         return state.withLock { $0.unregister(request, instanceCount: instanceCount) }
     }
     
-    func record(_ request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: Error?) {
+    func record(_ request: Request, instanceCount: Int, response: HTTPURLResponse?, data: Data?, error: (any Error)?) {
         dbQueue.asyncWriteWithoutTransaction { db in
             do {
                 // if request already exists
@@ -450,7 +449,7 @@ extension GRDBSession /* Transactions */ {
         var instanceCount: Int
         var response: URLResponse?
         var data: Data?
-        var error: Error?
+        var error: (any Error)?
     }
 }
 
@@ -480,7 +479,7 @@ extension GRDBSession: DejavuNetworkObservationHandler {
         }
     }
     
-    func requestFinished(identifier: String, result: Result<Data, Error>) {
+    func requestFinished(identifier: String, result: Result<Data, any Error>) {
         guard var transaction = state.withLock({ $0.transactions.removeValue(forKey: identifier) }) else {
             return
         }
@@ -498,15 +497,14 @@ extension GRDBSession: DejavuNetworkObservationHandler {
             transaction.error = error
             
             // Don't record error if in requestErrorsToIgnore
-            if let nsError = error as? NSError,
-               configuration.requestErrorsToIgnore.contains(where: { $0.domain == nsError.domain && $0.code == nsError.code }) {
+            let nsError = error as NSError
+            if configuration.requestErrorsToIgnore.contains(where: { $0.domain == nsError.domain && $0.code == nsError.code }) {
                 log("requestErrorsToIgnore (\(nsError.domain): \(nsError.code)): \(identifier): \(transaction.dejavuRequest.originalUrl), skipping recording of request", category: .recording, type: .info)
                 unregister(transaction.dejavuRequest, instanceCount: transaction.instanceCount)
-                return
+            } else {   
+                let response = transaction.response as? HTTPURLResponse
+                record(transaction.dejavuRequest, instanceCount: transaction.instanceCount, response: response, data: nil, error: error)
             }
-            
-            let response = transaction.response as? HTTPURLResponse
-            record(transaction.dejavuRequest, instanceCount: transaction.instanceCount, response: response, data: nil, error: error)
         }
     }
 }
