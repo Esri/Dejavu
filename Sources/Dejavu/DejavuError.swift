@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
 public enum DejavuError: Error {
     case internalError(String)
     case cacheDoesNotExist(fileURL: URL)
     case noMatchingRequestFoundInCache(requestUrl: URL) // code 2
     case noMatchingResponseFoundInCache(requestUrl: URL)
-    case failedToFetchResponseInCache(Error)
+    case failedToFetchResponseInCache(any Error)
     
     public var message: String {
         switch self {

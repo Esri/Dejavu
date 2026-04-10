@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
-internal import os
+import os
 
 /// A configuration specifies important Dejavu behavior. A configuration is
 /// needed to start a new session.
@@ -65,9 +65,9 @@ public final class DejavuSessionConfiguration: Sendable {
     /// The mode of operation for the Dejavu session.
     public let mode: Mode
     /// Observes network traffic during the session.
-    public let networkObserver: DejavuNetworkObserver
+    public let networkObserver: any DejavuNetworkObserver
     /// Intercepts network traffic during the session.
-    public let networkInterceptor: DejavuNetworkInterceptor
+    public let networkInterceptor: any DejavuNetworkInterceptor
     
     /// Replacements for query parameters.
     @preconcurrency public var queryParameterReplacements: [String: any Sendable] {
@@ -192,8 +192,8 @@ public final class DejavuSessionConfiguration: Sendable {
     public init(
         fileURL: URL,
         mode: Mode,
-        networkObserver: DejavuNetworkObserver,
-        networkInterceptor: DejavuNetworkInterceptor
+        networkObserver: any DejavuNetworkObserver,
+        networkInterceptor: any DejavuNetworkInterceptor
     ) {
         self.fileURL = fileURL
         self.mode = mode

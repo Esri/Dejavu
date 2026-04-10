@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import Foundation
+public import Foundation
 
 /// A type that allows observing the network.
 @preconcurrency
 public protocol DejavuNetworkObserver: Sendable {
-    func startObserving(handler: DejavuNetworkObservationHandler)
+    func startObserving(handler: any DejavuNetworkObservationHandler)
     func stopObserving()
 }
 
@@ -26,5 +26,5 @@ public protocol DejavuNetworkObserver: Sendable {
 public protocol DejavuNetworkObservationHandler: Sendable {
     func requestWillBeSent(identifier: String, request: URLRequest)
     func responseReceived(identifier: String, response: URLResponse)
-    func requestFinished(identifier: String, result: Result<Data, Error>)
+    func requestFinished(identifier: String, result: Result<Data, any Error>)
 }

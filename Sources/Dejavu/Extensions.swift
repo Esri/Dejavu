@@ -15,7 +15,7 @@
 import Foundation
 import CommonCrypto
 
-internal extension Data {
+extension Data {
     func hashSHA256() -> Data {
         let data = self
         var hashData = Data(count: Int(CC_SHA256_DIGEST_LENGTH))
@@ -36,13 +36,13 @@ internal extension Data {
     }
 }
 
-internal extension String {
+extension String {
     func hashSHA256() -> String {
         return data(using: .utf8)!.hashSHA256String()
     }
 }
 
-internal extension URL {
+extension URL {
     func removingQuery() -> URL {
         var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: false)!
         urlComponents.query = nil
@@ -57,19 +57,19 @@ internal extension URL {
     }
 }
 
-internal extension Dictionary where Key == String, Value == String {
+extension Dictionary where Key == String, Value == String {
     func toJSONData() throws -> Data {
         return try JSONSerialization.data(withJSONObject: self, options: [.sortedKeys])
     }
 }
 
-internal extension Dictionary where Key == String, Value == Any {
+extension Dictionary where Key == String, Value == Any {
     func toJSONData() throws -> Data {
         return try JSONSerialization.data(withJSONObject: self, options: [.sortedKeys])
     }
 }
 
-internal extension Data {
+extension Data {
     init(reading input: InputStream) {
         self.init()
         input.open()
@@ -86,7 +86,7 @@ internal extension Data {
     }
 }
 
-internal extension String {
+extension String {
     func replacingRegexMatches(pattern: String, substitutionTemplate: String = "") throws -> String {
         let regex = try NSRegularExpression(pattern: pattern, options: NSRegularExpression.Options.caseInsensitive)
         let range = NSRange(location: 0, length: self.count)
