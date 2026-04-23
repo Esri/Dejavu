@@ -23,9 +23,16 @@ public protocol DejavuSession: Sendable {
     typealias Configuration = DejavuSessionConfiguration
     
     var configuration: Configuration { get }
+    
+    // The URL to the database used in the session. If more than one path is
+    // set in the configutation, this is the URL to the database that is being
+    // used in the session.
+    var dbURL: URL { get }
 }
 
 struct DejavuNullSession: DejavuSession {
+    var dbURL: URL
+    
     let configuration: Configuration
     
     func clearCache() {}

@@ -51,6 +51,10 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
     private let state = OSAllocatedUnfairLock(initialState: State())
     
     let dbQueue: DatabaseQueue
+    // The URL to the database used in the session. If more than one path is
+    // set in the configutation, this is the URL to the database that is being
+    // used in the session.
+    let dbURL: URL
     
     required init(configuration: DejavuSessionConfiguration) throws {
         log("Initializing Dejavu GRDB session", category: .beginSession, type: .info)
@@ -58,12 +62,18 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
         switch configuration.mode {
         case .cleanRecord:
             dbQueue = try .dejavu()
+            dbURL = configuration.fileURLs.first(where: { FileManager.default.fileExists(atPath: $0.path) }) ?? configuration.fileURLs.first!
         case .supplementalRecord, .playback:
-            if FileManager.default.fileExists(at: configuration.fileURL) {
-                dbQueue = try .inMemoryCopy(from: configuration.fileURL)
+            if let fileURL = configuration.fileURLs.first(where: { FileManager.default.fileExists(at: $0) }) {
+                dbQueue = try .inMemoryCopy(from: fileURL)
+                dbURL = fileURL
+                log("Database found at \(fileURL.path)", category: .beginSession, type: .info)
             } else {
-                log("No database at \(configuration.fileURL.path)", category: .beginSession, type: .error)
+                for fileURL in configuration.fileURLs {
+                    log("No database at \(fileURL.path)", category: .beginSession, type: .error)
+                }
                 dbQueue = try .dejavu()
+                dbURL = configuration.fileURLs.first!
             }
         }
         
@@ -222,7 +232,7 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
     }
     
     func end() {
-        log("Ending Dejavu GRDB session: \(configuration.fileURL)", category: .endSession, type: .info)
+        log("Ending Dejavu GRDB session: \(dbURL)", category: .endSession, type: .info)
         
         switch configuration.mode {
         case .cleanRecord, .supplementalRecord:
@@ -258,13 +268,13 @@ final class GRDBSession: DejavuSession, @unchecked Sendable {
             dbQueue.releaseMemory()
             
             try? FileManager.default.createDirectory(
-                at: configuration.fileURL.deletingLastPathComponent(),
+                at: dbURL.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
             
             let backup: DatabaseQueue
             do {
-                backup = try DatabaseQueue(url: configuration.fileURL)
+                backup = try DatabaseQueue(url: dbURL)
                 try dbQueue.backup(to: backup)
                 try backup.close()
                 try dbQueue.close()

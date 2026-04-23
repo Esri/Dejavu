@@ -60,8 +60,11 @@ public final class DejavuSessionConfiguration: Sendable {
         case fallBackTo(_ request: FallbackRequest)
     }
     
-    /// The location to store mock data.
-    public let fileURL: URL
+    /// The location to read and store mock data. Data is read from the first
+    /// mock file found, looking in the URLs in order. When recording mocks,
+    /// any existing database will be replaced or supplemented; if no database
+    /// exists, a new database will be created in the first URL location.
+    public let fileURLs: [URL]
     /// The mode of operation for the Dejavu session.
     public let mode: Mode
     /// Observes network traffic during the session.
@@ -172,11 +175,11 @@ public final class DejavuSessionConfiguration: Sendable {
     
     /// Creates a new Dejavu configuration.
     /// - Parameters:
-    ///   - fileURL: The location to store mock data.
+    ///   - fileURL: The location to store and retrieve mock data.
     ///   - mode: The mode of operation for the Dejavu session.
     public convenience init(fileURL: URL, mode: Mode) {
         self.init(
-            fileURL: fileURL,
+            fileURLs: [fileURL],
             mode: mode,
             networkObserver: URLProtocolNetworkObserver.shared,
             networkInterceptor: URLProtocolNetworkInterceptor.shared
@@ -189,13 +192,50 @@ public final class DejavuSessionConfiguration: Sendable {
     ///   - mode: The mode of operation for the Dejavu session.
     ///   - networkObserver: Observes network traffic during the session.
     ///   - networkInterceptor: Intercepts network traffic during the session.
-    public init(
+    public convenience init(
         fileURL: URL,
         mode: Mode,
         networkObserver: any DejavuNetworkObserver,
         networkInterceptor: any DejavuNetworkInterceptor
     ) {
-        self.fileURL = fileURL
+        self.init(
+            fileURLs: [fileURL],
+            mode: mode,
+            networkObserver: URLProtocolNetworkObserver.shared,
+            networkInterceptor: URLProtocolNetworkInterceptor.shared
+        )
+    }
+
+    /// Creates a new Dejavu configuration.
+    /// - Parameters:
+    ///   - fileURLs: The location to store and retrieve mock data. Data is read
+    ///   from the first mock file found, looking in the URLs in order. If no
+    ///   file exists in any URL a new file is created in the first URL location.
+    ///   - mode: The mode of operation for the Dejavu session.
+    public convenience init(fileURLs: [URL], mode: Mode) {
+        self.init(
+            fileURLs: fileURLs,
+            mode: mode,
+            networkObserver: URLProtocolNetworkObserver.shared,
+            networkInterceptor: URLProtocolNetworkInterceptor.shared
+        )
+    }
+    
+    /// Creates a new Dejavu configuration.
+    /// - Parameters:
+    ///   - fileURLs: The location to store and retrieve mock data. Data is read
+    ///   from the first mock file found, looking in the URLs in order. If no
+    ///   file exists in any URL a new file is created in the first URL location.
+    ///   - mode: The mode of operation for the Dejavu session.
+    ///   - networkObserver: Observes network traffic during the session.
+    ///   - networkInterceptor: Intercepts network traffic during the session.
+    public init(
+        fileURLs: [URL],
+        mode: Mode,
+        networkObserver: any DejavuNetworkObserver,
+        networkInterceptor: any DejavuNetworkInterceptor
+    ) {
+        self.fileURLs = fileURLs
         self.mode = mode
         self.networkObserver = networkObserver
         self.networkInterceptor = networkInterceptor
