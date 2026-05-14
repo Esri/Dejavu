@@ -58,7 +58,7 @@ extension URLProtocolNetworkObserver: DejavuNetworkObserver {
             return state.urlProtocolUnregistrationHandler
         }
         let `class` = ObserverProtocol.self
-        URLProtocol.registerClass(`class`)
+        URLProtocol.unregisterClass(`class`)
         urlProtocolUnregistrationHandler?(`class`)
     }
 }
