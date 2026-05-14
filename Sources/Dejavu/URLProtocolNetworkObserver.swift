@@ -65,7 +65,9 @@ extension URLProtocolNetworkObserver: DejavuNetworkObserver {
 
 final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     static let session = URLSession(configuration: .ephemeral)
-    
+
+    private var dataTask: URLSessionDataTask?
+
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkObserver.shared.handler != nil
         if !hasHandler {
@@ -83,26 +85,61 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
             log("canInit called with no handler", type: .error)
             return
         }
-        
-        Task.detached {
-            guard let client = self.client else { return }
-            
-            let identifier = UUID().uuidString
-            handler.requestWillBeSent(identifier: identifier, request: self.request)
-            
-            do {
-                let (data, response) = try await Self.session.data(for: self.request)
+
+        guard let client else { return }
+
+        let identifier = UUID().uuidString
+        let clientBridge = ClientBridge(client: client, urlProtocol: self)
+
+        handler.requestWillBeSent(identifier: identifier, request: request)
+
+        let dataTask = Self.session.dataTask(with: request) { [clientBridge, handler, identifier] data, response, error in
+            if let response {
                 handler.responseReceived(identifier: identifier, response: response)
-                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-                client.urlProtocol(self, didLoad: data)
-                client.urlProtocolDidFinishLoading(self)
+                clientBridge.didReceive(response)
+            }
+
+            if let error {
+                clientBridge.didFail(with: error)
+                handler.requestFinished(identifier: identifier, result: .failure(error))
+            } else if let data {
+                clientBridge.didLoad(data)
+                clientBridge.didFinishLoading()
                 handler.requestFinished(identifier: identifier, result: .success(data))
-            } catch {
-                client.urlProtocol(self, didFailWithError: error)
+            } else {
+                let error = URLError(.badServerResponse)
+                clientBridge.didFail(with: error)
                 handler.requestFinished(identifier: identifier, result: .failure(error))
             }
         }
+
+        self.dataTask = dataTask
+        dataTask.resume()
     }
-    
-    override func stopLoading() {}
+
+    override func stopLoading() {
+        dataTask?.cancel()
+        dataTask = nil
+    }
+}
+
+private struct ClientBridge: @unchecked Sendable {
+    let client: any URLProtocolClient
+    let urlProtocol: ObserverProtocol
+
+    func didReceive(_ response: URLResponse) {
+        client.urlProtocol(urlProtocol, didReceive: response, cacheStoragePolicy: .notAllowed)
+    }
+
+    func didLoad(_ data: Data) {
+        client.urlProtocol(urlProtocol, didLoad: data)
+    }
+
+    func didFinishLoading() {
+        client.urlProtocolDidFinishLoading(urlProtocol)
+    }
+
+    func didFail(with error: any Error) {
+        client.urlProtocol(urlProtocol, didFailWithError: error)
+    }
 }
