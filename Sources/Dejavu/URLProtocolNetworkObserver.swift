@@ -65,7 +65,11 @@ extension URLProtocolNetworkObserver: DejavuNetworkObserver {
 
 final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     static let session = URLSession(configuration: .ephemeral)
-    private var dataTask: URLSessionDataTask?
+    private struct State {
+        var dataTask: URLSessionDataTask?
+    }
+    
+    private let state = OSAllocatedUnfairLock(initialState: State())
     
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkObserver.shared.handler != nil
@@ -81,7 +85,7 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     
     override func startLoading() {
         guard let handler = URLProtocolNetworkObserver.shared.handler else {
-            log("canInit called with no handler", type: .error)
+            log("startLoading called with no handler", type: .error)
             return
         }
         let request = self.request
@@ -90,7 +94,7 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
         let identifier = UUID().uuidString
         handler.requestWillBeSent(identifier: identifier, request: request)
         
-        dataTask = Self.session.dataTask(with: request) { [handler] data, response, error in
+        let dataTask = Self.session.dataTask(with: request) { [handler] data, response, error in
             if let error {
                 client.urlProtocol(self, didFailWithError: error)
                 handler.requestFinished(identifier: identifier, result: .failure(error))
@@ -111,11 +115,16 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
             client.urlProtocolDidFinishLoading(self)
             handler.requestFinished(identifier: identifier, result: .success(data))
         }
-        dataTask?.resume()
+        state.withLock { $0.dataTask = dataTask }
+        dataTask.resume()
     }
     
     override func stopLoading() {
+        let dataTask = state.withLock { state in
+            let dataTask = state.dataTask
+            state.dataTask = nil
+            return dataTask
+        }
         dataTask?.cancel()
-        dataTask = nil
     }
 }
