@@ -39,7 +39,6 @@
 		75EDE9B42A8FE62500DDAC12 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		75EDE9BA2A8FE62500DDAC12 /* ExamplesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExamplesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EDE9BE2A8FE62500DDAC12 /* ExamplesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamplesTests.swift; sourceTree = "<group>"; };
-		883E7EEB2FB68156005A0320 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +132,6 @@
 		75EDE9BD2A8FE62500DDAC12 /* ExamplesTests */ = {
 			isa = PBXGroup;
 			children = (
-				883E7EEB2FB68156005A0320 /* Info.plist */,
 				755D690D2A96B7FC000F7BB6 /* Test Support */,
 				75EDE9BE2A8FE62500DDAC12 /* ExamplesTests.swift */,
 			);
@@ -462,7 +460,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ExamplesTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esri.dejavu.ExamplesTests;
@@ -489,7 +486,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ExamplesTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esri.dejavu.ExamplesTests;
