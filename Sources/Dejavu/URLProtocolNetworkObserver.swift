@@ -58,13 +58,18 @@ extension URLProtocolNetworkObserver: DejavuNetworkObserver {
             return state.urlProtocolUnregistrationHandler
         }
         let `class` = ObserverProtocol.self
-        URLProtocol.registerClass(`class`)
+        URLProtocol.unregisterClass(`class`)
         urlProtocolUnregistrationHandler?(`class`)
     }
 }
 
 final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     static let session = URLSession(configuration: .ephemeral)
+    private struct State {
+        var dataTask: URLSessionDataTask?
+    }
+    
+    private let state = OSAllocatedUnfairLock(initialState: State())
     
     override class func canInit(with request: URLRequest) -> Bool {
         let hasHandler = URLProtocolNetworkObserver.shared.handler != nil
@@ -80,29 +85,41 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     
     override func startLoading() {
         guard let handler = URLProtocolNetworkObserver.shared.handler else {
-            log("canInit called with no handler", type: .error)
+            log("startLoading called with no handler", type: .error)
             return
         }
         
-        Task.detached {
-            guard let client = self.client else { return }
-            
-            let identifier = UUID().uuidString
-            handler.requestWillBeSent(identifier: identifier, request: self.request)
-            
-            do {
-                let (data, response) = try await Self.session.data(for: self.request)
+        guard let client else { return }
+        
+        let request = self.request
+        let identifier = UUID().uuidString
+        handler.requestWillBeSent(identifier: identifier, request: request)
+        
+        let dataTask = Self.session.dataTask(with: request) { [handler] data, response, error in
+            if let error {
+                client.urlProtocol(self, didFailWithError: error)
+                handler.requestFinished(identifier: identifier, result: .failure(error))
+            } else if let response {
+                let data = data ?? Data()
                 handler.responseReceived(identifier: identifier, response: response)
                 client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
                 client.urlProtocol(self, didLoad: data)
                 client.urlProtocolDidFinishLoading(self)
                 handler.requestFinished(identifier: identifier, result: .success(data))
-            } catch {
+            } else {
+                let error = URLError(.badServerResponse)
                 client.urlProtocol(self, didFailWithError: error)
                 handler.requestFinished(identifier: identifier, result: .failure(error))
             }
         }
+        state.withLock { $0.dataTask = dataTask }
+        dataTask.resume()
     }
     
-    override func stopLoading() {}
+    override func stopLoading() {
+        guard let dataTask = state.withLock({ $0.dataTask.take() }) else {
+            return
+        }
+        dataTask.cancel()
+    }
 }

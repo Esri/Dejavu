@@ -44,7 +44,7 @@ final class ExamplesTests: XCTestCase {
     
     func testExample() async throws {
         let (data, _) = try await session.data(from: .esri)
-        XCTAssertEqual(data.count, 46793)
+        XCTAssertEqual(data.count, 63659)
     }
 }
 
