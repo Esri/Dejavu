@@ -88,9 +88,10 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
             log("startLoading called with no handler", type: .error)
             return
         }
-        let request = self.request
-        guard let client = self.client else { return }
         
+        guard let client else { return }
+        
+        let request = self.request
         let identifier = UUID().uuidString
         handler.requestWillBeSent(identifier: identifier, request: request)
         
