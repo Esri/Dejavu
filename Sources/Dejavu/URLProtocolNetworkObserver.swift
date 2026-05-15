@@ -98,22 +98,18 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
             if let error {
                 client.urlProtocol(self, didFailWithError: error)
                 handler.requestFinished(identifier: identifier, result: .failure(error))
-                return
-            }
-            
-            guard let response else {
+            } else if let response {
+                let data = data ?? Data()
+                handler.responseReceived(identifier: identifier, response: response)
+                client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                client.urlProtocol(self, didLoad: data)
+                client.urlProtocolDidFinishLoading(self)
+                handler.requestFinished(identifier: identifier, result: .success(data))
+            } else {
                 let error = URLError(.badServerResponse)
                 client.urlProtocol(self, didFailWithError: error)
                 handler.requestFinished(identifier: identifier, result: .failure(error))
-                return
             }
-            
-            let data = data ?? Data()
-            handler.responseReceived(identifier: identifier, response: response)
-            client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client.urlProtocol(self, didLoad: data)
-            client.urlProtocolDidFinishLoading(self)
-            handler.requestFinished(identifier: identifier, result: .success(data))
         }
         state.withLock { $0.dataTask = dataTask }
         dataTask.resume()
