@@ -120,11 +120,9 @@ final class ObserverProtocol: URLProtocol, @unchecked Sendable {
     }
     
     override func stopLoading() {
-        let dataTask = state.withLock { state in
-            let dataTask = state.dataTask
-            state.dataTask = nil
-            return dataTask
+        guard let dataTask = state.withLock({ $0.dataTask.take() }) else {
+            return
         }
-        dataTask?.cancel()
+        dataTask.cancel()
     }
 }
